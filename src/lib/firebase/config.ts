@@ -17,11 +17,11 @@ const allVarsPresent =
   firebaseConfig.authDomain &&
   firebaseConfig.projectId;
 
-if (!allVarsPresent) {
-    console.error("Firebase config is missing. Make sure to set all NEXT_PUBLIC_FIREBASE_ environment variables in your .env file.");
+let app;
+if (typeof window !== 'undefined' && allVarsPresent) {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 }
 
-const app = allVarsPresent && !getApps().length ? initializeApp(firebaseConfig) : (allVarsPresent ? getApp() : null);
 const auth = app ? getAuth(app) : null;
 
 export {app, auth};
