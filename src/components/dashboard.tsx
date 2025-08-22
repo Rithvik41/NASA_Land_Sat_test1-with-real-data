@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { addDays, format, differenceInMilliseconds } from "date-fns";
+import { addDays, format } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { InputPanel } from "@/components/input-panel";
 import { SummaryCards } from "@/components/summary-cards";
@@ -102,6 +102,7 @@ export function Dashboard() {
 
 
   const fetchNextPass = useCallback(async (latitude: string, longitude: string) => {
+      if (!latitude || !longitude) return;
       setIsFetchingPass(true);
       const result = await predictSatellitePassAction({ latitude: parseFloat(latitude), longitude: parseFloat(longitude) });
       if (result.error) {
@@ -135,6 +136,13 @@ export function Dashboard() {
       toast({ title: "Success", description: "Metrics computed successfully." });
     }, 1500);
   }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass]);
+  
+  useEffect(() => {
+    if (lat && lon) {
+        fetchNextPass(lat, lon);
+    }
+  }, [lat, lon, fetchNextPass]);
+
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
     setMetrics(updatedMetrics);
@@ -171,6 +179,13 @@ export function Dashboard() {
             <Skeleton className="h-96" />
         </div>
       )}
+      
+      {!isComputing && metrics.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+              <p>Click "Compute Metrics" to get started.</p>
+          </div>
+      )}
+
 
       {!isComputing && metrics.length > 0 && (
         <>
