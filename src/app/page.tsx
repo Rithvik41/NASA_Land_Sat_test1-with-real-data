@@ -2,9 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import { Mountain, Cpu, BarChart, Settings, CheckCircle, ArrowRight, Download, SlidersHorizontal } from "lucide-react";
+import { Cpu, BarChart, Download, SlidersHorizontal, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
+import { GeometricBackground } from "@/components/geometric-background";
 
 export default function LandingPage() {
     const scrollToFeatures = () => {
@@ -20,12 +21,7 @@ export default function LandingPage() {
       <main className="flex-1">
         <section className="relative w-full h-[80vh] md:h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
              <div className="absolute inset-0 z-0">
-                <img
-                    src="https://placehold.co/1920x1080.png"
-                    alt="Abstract geometric design"
-                    data-ai-hint="geometric abstract"
-                    className="w-full h-full object-cover"
-                />
+                <GeometricBackground />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
              </div>
 
@@ -139,8 +135,8 @@ export default function LandingPage() {
           &copy; 2024 Earth Insights. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-            <Link href="#about" className="text-xs hover:underline underline-offset-4 text-muted-foreground">About</Link>
-            <Link href="#contact" className="text-xs hover:underline underline-offset-4 text-muted-foreground">Contact</Link>
+            <Link href="#about" className="text-xs hover:underline underline-offset-4 text-muted-foreground" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({behavior: 'smooth'})}}>About</Link>
+            <Link href="#contact" className="text-xs hover:underline underline-offset-4 text-muted-foreground" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}}>Contact</Link>
         </nav>
       </footer>
     </div>
