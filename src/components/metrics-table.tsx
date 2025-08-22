@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -39,9 +40,10 @@ interface MetricsTableProps {
   onMetricsUpdate: (metrics: MetricData[]) => void;
   location: string;
   dateRange: string;
+  onViewVisualizations: () => void;
 }
 
-export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: MetricsTableProps) {
+export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange, onViewVisualizations }: MetricsTableProps) {
   const { toast } = useToast();
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -114,10 +116,11 @@ export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: 
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Numeric Summary</CardTitle>
-            <CardDescription>Detailed metrics for the selected period.</CardDescription>
+            <CardTitle>Computed Metrics</CardTitle>
+            <CardDescription>Detailed metrics including spectral indices, land cover statistics, and change detection.</CardDescription>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={onViewVisualizations}><BarChart2 className="mr-2 h-4 w-4" /> View Plots</Button>
             <Button variant="outline" onClick={handleExportCsv}><Download className="mr-2 h-4 w-4" /> Export CSV</Button>
             <Button variant="outline" onClick={handleExportReport} disabled={reportLoading}>
               {reportLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}

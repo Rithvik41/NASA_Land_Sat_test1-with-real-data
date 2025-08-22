@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
@@ -11,9 +12,15 @@ import { useToast } from "@/hooks/use-toast";
 import type { MetricData, GroundTruthDataPoint, SatellitePassData } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction } from "@/lib/actions";
+import { useRouter } from "next/navigation";
 
 // Mock data generation
-const metricNames = ['NDVI', 'NDBI', 'NDWI', 'NBR', 'MNDWI', 'Yield Index', 'Soil Moisture Percent', 'Water Percent', 'SWIR Ratio'];
+const metricNames = [
+  'NDVI', 'NDBI', 'NDWI', 'NBR', 'MNDWI', 'Yield Index', 'Soil Moisture Percent', 'Water Percent', 'SWIR Ratio',
+  'Vegetation Area', 'Built-up Area', 'Water Area', 'Other Area',
+  'Vegetation Area Change', 'Built-up Area Change', 'Water Area Change', 'Other Area Change',
+  'Built-up Expansion', 'Vegetation Loss'
+];
 
 function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthDataPoint[]): MetricData[] {
   const from = dateRange.from || new Date();
@@ -25,10 +32,20 @@ function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthD
     if (name.includes('Percent') || name === 'Yield Index') {
         baseValue = Math.random() * 100;
     }
+    if (name.includes('Area')) {
+        baseValue = Math.random() * 1000;
+    }
+     if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
+        baseValue = (Math.random() - 0.5) * 200;
+    }
+
 
     const timeSeries = Array.from({ length: diffDays }, (_, i) => {
       const date = addDays(from, i);
-      const value = baseValue + (Math.random() - 0.5) * 0.1 * (i / diffDays); // Simulate some trend
+      let value = baseValue + (Math.random() - 0.5) * 0.1 * (i / diffDays);
+       if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
+        value = baseValue + (Math.random() - 0.5) * 10 * (i/diffDays);
+       }
       return { date: date.toISOString(), value };
     });
 
@@ -38,7 +55,11 @@ function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthD
     
     let percentageChange: number | null = null;
     if (firstValue !== null && lastValue !== null && firstValue !== 0) {
-      percentageChange = ((lastValue - firstValue) / Math.abs(firstValue)) * 100;
+        if(name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
+            percentageChange = lastValue; // For change metrics, this might represent the final change percentage
+        } else {
+             percentageChange = ((lastValue - firstValue) / Math.abs(firstValue)) * 100;
+        }
     }
     
     return {
@@ -55,6 +76,7 @@ function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthD
 
 export function Dashboard() {
   const { toast } = useToast();
+  const router = useRouter();
   const [lat, setLat] = useState("40.7128");
   const [lon, setLon] = useState("-74.0060");
   const [locationDesc, setLocationDesc] = useState("New York City");
@@ -70,7 +92,6 @@ export function Dashboard() {
   const [isFetchingPass, setIsFetchingPass] = useState(false);
 
   useEffect(() => {
-    // Request notification permission when component mounts
     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
       Notification.requestPermission();
     }
@@ -83,7 +104,6 @@ export function Dashboard() {
 
     const passTime = new Date(nextPass.passTime);
     const now = new Date();
-    // Notify 1 minute before the pass
     const notificationTime = passTime.getTime() - 60000;
     const delay = notificationTime - now.getTime();
 
@@ -91,11 +111,9 @@ export function Dashboard() {
       const timerId = setTimeout(() => {
         new Notification("Satellite Alert", {
           body: `Satellite ${nextPass.satelliteName} will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
-          icon: "/satellite.png", // Assumes you have a satellite icon in your public folder
         });
       }, delay);
 
-      // Cleanup timeout if component unmounts or nextPass changes
       return () => clearTimeout(timerId);
     }
   }, [nextPass, lat, lon]);
@@ -128,12 +146,15 @@ export function Dashboard() {
     setNextPass(null);
     fetchNextPass(lat, lon);
 
-    // Simulate API call
     setTimeout(() => {
       const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
       setMetrics(mockData);
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
+      // We are storing metrics in local storage to be accessed by the visualizations page.
+      // In a real app, this might be handled by state management (e.g., Context, Redux) or by passing data via URL.
+      localStorage.setItem('metrics', JSON.stringify(mockData));
+      localStorage.setItem('selectedMetric', 'NDVI'); // Default metric
     }, 1500);
   }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass]);
   
@@ -146,6 +167,11 @@ export function Dashboard() {
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
     setMetrics(updatedMetrics);
+    localStorage.setItem('metrics', JSON.stringify(updatedMetrics));
+  }
+  
+  const onViewVisualizations = () => {
+      router.push('/visualizations');
   }
 
   const dateRangeString = dateRange?.from && dateRange?.to 
@@ -182,10 +208,9 @@ export function Dashboard() {
       
       {!isComputing && metrics.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
-              <p>Click "Compute Metrics" to get started.</p>
+              <p>Enter coordinates and click "Compute Metrics" to get started.</p>
           </div>
       )}
-
 
       {!isComputing && metrics.length > 0 && (
         <>
@@ -199,12 +224,9 @@ export function Dashboard() {
             onMetricsUpdate={onMetricsUpdate} 
             location={`${lat}, ${lon}`}
             dateRange={dateRangeString}
+            onViewVisualizations={onViewVisualizations}
           />
-          <Visualizations
-            metrics={metrics}
-            selectedMetric={selectedMetric}
-            setSelectedMetric={setSelectedMetric}
-          />
+          {/* The Visualizations component is now on a separate page */}
         </>
       )}
     </div>

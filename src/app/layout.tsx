@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -6,7 +7,7 @@ import { ThemeProvider } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Earth Insights Dashboard",
+  title: "Earth Insights",
   description: "Analyze environmental data with cutting-edge insights.",
 };
 

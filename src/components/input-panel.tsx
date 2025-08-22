@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -15,7 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { parseCsv } from "@/lib/csv";
 import { suggestCoordinatesAction } from "@/lib/actions";
 import type { GroundTruthDataPoint } from "@/lib/types";
-import { MapPin } from "./map-pin";
 
 interface InputPanelProps {
   lat: string;
@@ -82,94 +82,84 @@ export function InputPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Data Input</CardTitle>
+        <CardTitle>Data Input & Satellite Tracking</CardTitle>
         <CardDescription>
-          Specify coordinates, date range, and optional ground truth data.
+          Specify coordinates, date range, and optional ground truth data to compute environmental metrics.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-              <div className="space-y-2 col-span-1 md:col-span-2">
-                <Label htmlFor="location-desc">Location Description (for AI suggestions)</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="location-desc"
-                    placeholder="e.g., Amazon Rainforest"
-                    value={locationDesc}
-                    onChange={(e) => setLocationDesc(e.target.value)}
-                    disabled={isSuggesting}
-                  />
-                  <Button onClick={handleSuggestCoordinates} disabled={isSuggesting || !locationDesc}>
-                    {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                    <span className="sr-only">Suggest Coordinates</span>
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input id="latitude" placeholder="e.g., 40.7128" value={lat} onChange={(e) => setLat(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input id="longitude" placeholder="e.g., -74.0060" value={lon} onChange={(e) => setLon(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-              <div className="space-y-2">
-                <Label>Date range</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dateRange && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange?.from ? (
-                        dateRange.to ? (
-                          <>
-                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                            {format(dateRange.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(dateRange.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="range"
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={setDateRange}
-                      numberOfMonths={2}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="csv-upload">Ground Truth (CSV)</Label>
-                <Button asChild variant="outline" className="w-full justify-start text-left font-normal">
-                    <Label htmlFor="csv-upload" className="w-full cursor-pointer">
-                        <Upload className="mr-2 h-4 w-4" />
-                        <span className="truncate">{fileName || "Upload file"}</span>
-                    </Label>
-                </Button>
-                <Input id="csv-upload" type="file" accept=".csv" className="sr-only" onChange={handleFileChange} />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="space-y-2 col-span-1 md:col-span-2">
+            <Label htmlFor="location-desc">Location Description (for AI suggestions)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="location-desc"
+                placeholder="e.g., Amazon Rainforest"
+                value={locationDesc}
+                onChange={(e) => setLocationDesc(e.target.value)}
+                disabled={isSuggesting}
+              />
+              <Button onClick={handleSuggestCoordinates} disabled={isSuggesting || !locationDesc} size="icon">
+                {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                <span className="sr-only">Suggest Coordinates</span>
+              </Button>
             </div>
           </div>
-          <div className="lg:col-span-1 rounded-lg overflow-hidden h-48 lg:h-auto">
-             <MapPin lat={parseFloat(lat) || 0} lon={parseFloat(lon) || 0} setLat={setLat} setLon={setLon} />
+          <div className="space-y-2">
+            <Label htmlFor="latitude">Latitude</Label>
+            <Input id="latitude" placeholder="e.g., 40.7128" value={lat} onChange={(e) => setLat(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="longitude">Longitude</Label>
+            <Input id="longitude" placeholder="e.g., -74.0060" value={lon} onChange={(e) => setLon(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Date range</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="csv-upload">Ground Truth (CSV)</Label>
+            <Button asChild variant="outline" className="w-full justify-start text-left font-normal">
+                <Label htmlFor="csv-upload" className="w-full cursor-pointer">
+                    <Upload className="mr-2 h-4 w-4" />
+                    <span className="truncate">{fileName || "Upload file"}</span>
+                </Label>
+            </Button>
+            <Input id="csv-upload" type="file" accept=".csv" className="sr-only" onChange={handleFileChange} />
           </div>
         </div>
          <div className="flex justify-end">
