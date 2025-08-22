@@ -1,6 +1,5 @@
 import { Mountain } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { AuthButton } from "@/components/auth-button";
 
 export function Header() {
   return (
@@ -11,7 +10,6 @@ export function Header() {
           <span className="font-bold">Earth Insights Dashboard</span>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <AuthButton />
           <ThemeToggle />
         </div>
       </div>
