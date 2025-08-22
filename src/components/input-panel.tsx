@@ -169,7 +169,7 @@ export function InputPanel({
             </div>
           </div>
           <div className="lg:col-span-1 rounded-lg overflow-hidden h-48 lg:h-auto">
-             <MapPin lat={parseFloat(lat) || 0} lon={parseFloat(lon) || 0} />
+             <MapPin lat={parseFloat(lat) || 0} lon={parseFloat(lon) || 0} setLat={setLat} setLon={setLon} />
           </div>
         </div>
          <div className="flex justify-end">
