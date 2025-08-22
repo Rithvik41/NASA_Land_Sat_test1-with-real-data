@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { MetricData, GroundTruthDataPoint, SatellitePassData } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction } from "@/lib/actions";
-import { useRouter } from "next/navigation";
 
 // Mock data generation
 const metricNames = [
@@ -76,7 +75,6 @@ function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthD
 
 export function Dashboard() {
   const { toast } = useToast();
-  const router = useRouter();
   const [lat, setLat] = useState("40.7128");
   const [lon, setLon] = useState("-74.0060");
   const [locationDesc, setLocationDesc] = useState("New York City");
@@ -149,12 +147,9 @@ export function Dashboard() {
     setTimeout(() => {
       const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
       setMetrics(mockData);
+      setSelectedMetric('NDVI'); // Reset to default metric on new computation
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
-      // We are storing metrics in local storage to be accessed by the visualizations page.
-      // In a real app, this might be handled by state management (e.g., Context, Redux) or by passing data via URL.
-      localStorage.setItem('metrics', JSON.stringify(mockData));
-      localStorage.setItem('selectedMetric', 'NDVI'); // Default metric
     }, 1500);
   }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass]);
   
@@ -167,13 +162,8 @@ export function Dashboard() {
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
     setMetrics(updatedMetrics);
-    localStorage.setItem('metrics', JSON.stringify(updatedMetrics));
   }
   
-  const onViewVisualizations = () => {
-      router.push('/visualizations');
-  }
-
   const dateRangeString = dateRange?.from && dateRange?.to 
     ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}`
     : "N/A";
@@ -224,9 +214,12 @@ export function Dashboard() {
             onMetricsUpdate={onMetricsUpdate} 
             location={`${lat}, ${lon}`}
             dateRange={dateRangeString}
-            onViewVisualizations={onViewVisualizations}
           />
-          {/* The Visualizations component is now on a separate page */}
+          <Visualizations
+            metrics={metrics}
+            selectedMetric={selectedMetric}
+            setSelectedMetric={setSelectedMetric}
+          />
         </>
       )}
     </div>

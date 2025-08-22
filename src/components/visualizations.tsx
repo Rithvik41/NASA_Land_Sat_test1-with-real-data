@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, Label
 } from 'recharts';
@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { MetricData } from '@/lib/types';
 import { format } from 'date-fns';
-import { Skeleton } from './ui/skeleton';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -48,46 +47,19 @@ function combineAndSortData(metric: MetricData) {
 }
 
 
-export function Visualizations() {
+interface VisualizationsProps {
+  metrics: MetricData[];
+  selectedMetric: string;
+  setSelectedMetric: (metric: string) => void;
+}
+
+export function Visualizations({ metrics, selectedMetric, setSelectedMetric }: VisualizationsProps) {
   const chartRef = useRef(null);
   const scatterRef = useRef(null);
-  const [metrics, setMetrics] = useState<MetricData[]>([]);
-  const [selectedMetric, setSelectedMetric] = useState<string>('NDVI');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // This effect runs on the client side.
-    const storedMetrics = localStorage.getItem('metrics');
-    const storedSelectedMetric = localStorage.getItem('selectedMetric');
-    if (storedMetrics) {
-      setMetrics(JSON.parse(storedMetrics));
-    }
-    if (storedSelectedMetric) {
-      setSelectedMetric(storedSelectedMetric);
-    }
-    setLoading(false);
-  }, []);
-
-  const handleMetricChange = (metricName: string) => {
-    setSelectedMetric(metricName);
-    localStorage.setItem('selectedMetric', metricName);
-  }
 
   const metric = metrics.find(m => m.name === selectedMetric);
   const ndviMetric = metrics.find(m => m.name === 'NDVI');
   const comparisonData = ndviMetric ? combineAndSortData(ndviMetric) : [];
-
-  if (loading) {
-      return <Skeleton className="h-[500px] w-full" />;
-  }
-
-  if (metrics.length === 0) {
-      return (
-          <div className="text-center py-16 text-muted-foreground">
-              <p>No data to visualize. Please compute metrics on the dashboard first.</p>
-          </div>
-      )
-  }
 
   return (
     <Card>
@@ -106,7 +78,7 @@ export function Visualizations() {
           </TabsList>
           <TabsContent value="time-series" className="mt-4">
             <div className="flex justify-end mb-4">
-                <Select value={selectedMetric} onValueChange={handleMetricChange}>
+                <Select value={selectedMetric} onValueChange={setSelectedMetric}>
                     <SelectTrigger className="w-[280px]">
                         <SelectValue placeholder="Select a metric" />
                     </SelectTrigger>

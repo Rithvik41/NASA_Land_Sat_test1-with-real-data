@@ -22,8 +22,8 @@ export default function LandingPage() {
              <div className="absolute inset-0 z-0">
                 <img
                     src="https://placehold.co/1920x1080.png"
-                    alt="Satellite view of Earth"
-                    data-ai-hint="satellite earth"
+                    alt="Abstract geometric design"
+                    data-ai-hint="geometric abstract"
                     className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
@@ -100,16 +100,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="value-prop" className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
+        <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
             <div className="container px-4 md:px-6">
                  <div className="grid gap-10 lg:grid-cols-2 items-center">
-                    <div>
+                    <div className="lg:col-span-2 text-center">
                         <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm mb-2">Why Us?</div>
                         <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">The Ultimate Environmental Data Platform</h2>
-                        <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed mt-4">
+                        <p className="max-w-3xl mx-auto text-muted-foreground md:text-xl/relaxed mt-4">
                             We provide a seamless bridge between complex satellite imagery and clear, actionable environmental intelligence.
                         </p>
-                        <ul className="mt-6 space-y-4">
+                    </div>
+                    <div className="col-span-1 lg:col-span-2">
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                             <li className="flex items-start">
                                 <CheckCircle className="h-6 w-6 mr-3 text-primary flex-shrink-0 mt-1" />
                                 <span className="text-muted-foreground"><strong>Built on Google Earth Engine</strong> for robust, scalable analysis.</span>
@@ -128,25 +130,17 @@ export default function LandingPage() {
                             </li>
                         </ul>
                     </div>
-                    <div>
-                        <img 
-                             src="https://placehold.co/600x400.png"
-                            alt="Data Visualization"
-                            data-ai-hint="data visualization chart"
-                            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
-                        />
-                    </div>
                  </div>
             </div>
         </section>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <footer id="contact" className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-muted-foreground">
           &copy; 2024 Earth Insights. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-            <Link href="#" className="text-xs hover:underline underline-offset-4 text-muted-foreground">About</Link>
-            <Link href="#" className="text-xs hover:underline underline-offset-4 text-muted-foreground">Contact</Link>
+            <Link href="#about" className="text-xs hover:underline underline-offset-4 text-muted-foreground">About</Link>
+            <Link href="#contact" className="text-xs hover:underline underline-offset-4 text-muted-foreground">Contact</Link>
         </nav>
       </footer>
     </div>

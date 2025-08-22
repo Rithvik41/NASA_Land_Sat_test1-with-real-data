@@ -9,6 +9,12 @@ import React, { useState, useEffect } from "react";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
 
+const scrolltoHash = function (element_id: string) {
+  const element = document.getElementById(element_id.replace('#', ''))
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' })
+  }
+}
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -48,17 +54,32 @@ export function Header() {
         </div>
         <nav className="hidden md:flex items-center space-x-2 lg:space-x-4 text-sm font-medium">
              <Button variant="link" asChild className={linkClass}>
-                <Link href={isLandingPage ? "#features" : "/"}>
+                <Link href={isLandingPage ? "#features" : "/#features"} onClick={(e) => {
+                    if (isLandingPage) {
+                        e.preventDefault();
+                        scrolltoHash("#features");
+                    }
+                }}>
                     Features
                 </Link>
             </Button>
             <Button variant="link" asChild className={linkClass}>
-                <Link href="#">
+                <Link href={isLandingPage ? "#about" : "/#about"} onClick={(e) => {
+                     if (isLandingPage) {
+                        e.preventDefault();
+                        scrolltoHash("#about");
+                    }
+                }}>
                     About
                 </Link>
             </Button>
             <Button variant="link" asChild className={linkClass}>
-                <Link href="#">
+                <Link href={isLandingPage ? "#contact" : "/#contact"} onClick={(e) => {
+                     if (isLandingPage) {
+                        e.preventDefault();
+                        scrolltoHash("#contact");
+                    }
+                }}>
                     Contact
                 </Link>
             </Button>
@@ -70,7 +91,7 @@ export function Header() {
                     Dashboard
                 </Link>
             </Button>
-             <Button variant="ghost" asChild className={buttonLinkClass}>
+             <Button variant="ghost" asChild className={cn(buttonLinkClass, "hidden")}>
                 <Link href="/visualizations">
                     <BarChart3 className="mr-2 h-4 w-4"/>
                     Visualizations
@@ -83,7 +104,7 @@ export function Header() {
                 </Link>
             </Button>
           <ThemeToggle />
-           <Button asChild size="sm" className={cn(isLandingPage && "hidden")}>
+           <Button asChild size="sm" className={cn(!isLandingPage && "hidden")}>
                 <Link href="/dashboard">Get Started</Link>
            </Button>
         </div>
