@@ -3,6 +3,7 @@
 import { generateDataInsights } from "@/ai/flows/generate-insights";
 import { generateReportSummary } from "@/ai/flows/generate-report-summary";
 import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
+import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
 import type { MetricData } from "@/lib/types";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
@@ -57,4 +58,14 @@ export async function generateReportAction(
     console.error(error);
     return { error: "Failed to generate summary report. Please try again." };
   }
+}
+
+export async function predictSatellitePassAction(input: { latitude: number; longitude: number; }) {
+    try {
+        const result = await predictSatellitePass(input);
+        return { data: result };
+    } catch (error) {
+        console.error(error);
+        return { error: "Failed to predict satellite pass. Please try again." };
+    }
 }

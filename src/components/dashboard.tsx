@@ -10,6 +10,7 @@ import { Visualizations } from "@/components/visualizations";
 import { useToast } from "@/hooks/use-toast";
 import type { MetricData, GroundTruthDataPoint } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { predictSatellitePassAction } from "@/lib/actions";
 
 // Mock data generation
 const metricNames = ['NDVI', 'NDBI', 'NDWI', 'NBR', 'MNDWI', 'Yield Index', 'Soil Moisture Percent', 'Water Percent', 'SWIR Ratio'];
@@ -65,6 +66,20 @@ export function Dashboard() {
   const [metrics, setMetrics] = useState<MetricData[]>([]);
   const [isComputing, setIsComputing] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string>("NDVI");
+  const [nextPass, setNextPass] = useState<string | null>(null);
+  const [isFetchingPass, setIsFetchingPass] = useState(false);
+
+  const fetchNextPass = useCallback(async (latitude: string, longitude: string) => {
+      setIsFetchingPass(true);
+      const result = await predictSatellitePassAction({ latitude: parseFloat(latitude), longitude: parseFloat(longitude) });
+      if (result.error) {
+          toast({ title: "AI Error", description: result.error, variant: "destructive" });
+          setNextPass(null);
+      } else if (result.data) {
+          setNextPass(result.data.passTime);
+      }
+      setIsFetchingPass(false);
+  }, [toast]);
 
   const handleCompute = useCallback(() => {
     if (!lat || !lon) {
@@ -77,6 +92,9 @@ export function Dashboard() {
     }
 
     setIsComputing(true);
+    setNextPass(null);
+    fetchNextPass(lat, lon);
+
     // Simulate API call
     setTimeout(() => {
       const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
@@ -84,7 +102,7 @@ export function Dashboard() {
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
     }, 1500);
-  }, [lat, lon, dateRange, groundTruthData, toast]);
+  }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass]);
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
     setMetrics(updatedMetrics);
@@ -124,7 +142,11 @@ export function Dashboard() {
 
       {!isComputing && metrics.length > 0 && (
         <>
-          <SummaryCards metrics={metrics} />
+          <SummaryCards 
+            metrics={metrics} 
+            nextPass={nextPass}
+            isFetchingPass={isFetchingPass}
+          />
           <MetricsTable 
             metrics={metrics} 
             onMetricsUpdate={onMetricsUpdate} 
