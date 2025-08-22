@@ -1,9 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, TrendingUp, Droplets, Leaf, Home, Mountain, Satellite, Loader2 } from "lucide-react";
-import type { MetricData } from "@/lib/types";
+import { ArrowUp, ArrowDown, TrendingUp, Droplets, Leaf, Home, Mountain, Satellite, Loader2, CircleDotDashed, Rocket } from "lucide-react";
+import type { MetricData, SatellitePassData } from "@/lib/types";
 import { format, formatDistanceToNow } from 'date-fns';
+import { Badge } from "@/components/ui/badge";
 
 const metricIcons: { [key: string]: React.ReactNode } = {
   NDVI: <Leaf className="h-4 w-4 text-muted-foreground" />,
@@ -25,7 +26,7 @@ function getMetricCardData(metrics: MetricData[]) {
 }
 
 
-export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: MetricData[], nextPass: string | null, isFetchingPass: boolean }) {
+export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: MetricData[], nextPass: SatellitePassData | null, isFetchingPass: boolean }) {
   const cardData = getMetricCardData(metrics);
 
   const renderNextPass = () => {
@@ -38,14 +39,22 @@ export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: M
         )
     }
     if (nextPass) {
-        const passDate = new Date(nextPass);
+        const passDate = new Date(nextPass.passTime);
         return (
-             <>
+             <div className="space-y-2">
                 <div className="text-2xl font-bold">{format(passDate, "HH:mm:ss")}</div>
                 <p className="text-xs text-muted-foreground">
                     {formatDistanceToNow(passDate, { addSuffix: true })}
                 </p>
-             </>
+                <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1"><CircleDotDashed className="h-3 w-3" />Status:</span>
+                    <Badge variant={nextPass.status.toLowerCase() === 'active' ? 'default' : 'secondary'}>{nextPass.status}</Badge>
+                </div>
+                 <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1"><Rocket className="h-3 w-3" />Speed:</span>
+                    <span>{nextPass.speed.toFixed(2)} km/s</span>
+                </div>
+             </div>
         )
     }
     return <div className="text-2xl font-bold">N/A</div>;
@@ -91,6 +100,7 @@ export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: M
             <Satellite className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+            {nextPass && <div className="font-semibold text-sm mb-2">{nextPass.satelliteName}</div>}
             {renderNextPass()}
           </CardContent>
       </Card>

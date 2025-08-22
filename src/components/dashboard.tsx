@@ -8,7 +8,7 @@ import { SummaryCards } from "@/components/summary-cards";
 import { MetricsTable } from "@/components/metrics-table";
 import { Visualizations } from "@/components/visualizations";
 import { useToast } from "@/hooks/use-toast";
-import type { MetricData, GroundTruthDataPoint } from "@/lib/types";
+import type { MetricData, GroundTruthDataPoint, SatellitePassData } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction } from "@/lib/actions";
 
@@ -66,7 +66,7 @@ export function Dashboard() {
   const [metrics, setMetrics] = useState<MetricData[]>([]);
   const [isComputing, setIsComputing] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string>("NDVI");
-  const [nextPass, setNextPass] = useState<string | null>(null);
+  const [nextPass, setNextPass] = useState<SatellitePassData | null>(null);
   const [isFetchingPass, setIsFetchingPass] = useState(false);
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export function Dashboard() {
       return;
     }
 
-    const passTime = new Date(nextPass);
+    const passTime = new Date(nextPass.passTime);
     const now = new Date();
     // Notify 1 minute before the pass
     const notificationTime = passTime.getTime() - 60000;
@@ -90,7 +90,7 @@ export function Dashboard() {
     if (delay > 0) {
       const timerId = setTimeout(() => {
         new Notification("Satellite Alert", {
-          body: `A satellite will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
+          body: `Satellite ${nextPass.satelliteName} will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
           icon: "/satellite.png", // Assumes you have a satellite icon in your public folder
         });
       }, delay);
@@ -109,7 +109,7 @@ export function Dashboard() {
           toast({ title: "AI Error", description: result.error, variant: "destructive" });
           setNextPass(null);
       } else if (result.data) {
-          setNextPass(result.data.passTime);
+          setNextPass(result.data);
       }
       setIsFetchingPass(false);
   }, [toast]);

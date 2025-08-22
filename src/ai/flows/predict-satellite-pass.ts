@@ -19,6 +19,9 @@ export type PredictSatellitePassInput = z.infer<typeof PredictSatellitePassInput
 
 const PredictSatellitePassOutputSchema = z.object({
   passTime: z.string().describe('The predicted next satellite pass time in UTC ISO 8601 format.'),
+  satelliteName: z.string().describe('The name of the satellite (e.g., Landsat 8, Sentinel-2).'),
+  status: z.string().describe('The operational status of the satellite (e.g., Active, Maintenance).'),
+  speed: z.number().describe('The orbital speed of the satellite in km/s.'),
 });
 export type PredictSatellitePassOutput = z.infer<typeof PredictSatellitePassOutputSchema>;
 
@@ -30,14 +33,14 @@ const prompt = ai.definePrompt({
   name: 'predictSatellitePassPrompt',
   input: {schema: PredictSatellitePassInputSchema},
   output: {schema: PredictSatellitePassOutputSchema},
-  prompt: `You are a satellite tracking expert. Given the coordinates, predict the next satellite pass time (e.g., for a satellite like Landsat 8 or similar earth observation satellite).
+  prompt: `You are a satellite tracking expert. Given the coordinates, predict the next satellite pass for a relevant earth observation satellite (e.g., Landsat 8, Sentinel-2, GOES).
 
   The current date is ${new Date().toISOString()}. The returned pass time should be in the near future (within the next 24 hours).
 
   Latitude: {{{latitude}}}
   Longitude: {{{longitude}}}
 
-  Respond with the predicted pass time in UTC ISO 8601 format.
+  Respond with the predicted pass time in UTC ISO 8601 format, the satellite's name, its current status, and its approximate orbital speed in km/s.
 `,
 });
 

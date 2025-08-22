@@ -18,6 +18,42 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
 
+// Define the form component outside of the page component to prevent re-creation on state change
+const AuthForm = ({ 
+  isSignUp, 
+  handleAuthAction, 
+  loading, 
+  email,
+  setEmail,
+  password,
+  setPassword
+}: { 
+  isSignUp: boolean;
+  handleAuthAction: (isSignUp: boolean) => void;
+  loading: boolean;
+  email: string;
+  setEmail: (val: string) => void;
+  password: string;
+  setPassword: (val: string) => void;
+}) => (
+    <form onSubmit={(e: FormEvent) => { e.preventDefault(); handleAuthAction(isSignUp); }}>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor={isSignUp ? "signup-email" : "signin-email"}>Email</Label>
+          <Input id={isSignUp ? "signup-email" : "signin-email"} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={isSignUp ? "signup-password" : "signin-password"}>Password</Label>
+          <Input id={isSignUp ? "signup-password" : "signin-password"} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        </div>
+        <Button type="submit" disabled={loading} className="w-full">
+           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isSignUp ? "Sign Up" : "Sign In"}
+        </Button>
+      </div>
+    </form>
+  );
+
 export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,25 +97,6 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
-  
-  const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => (
-    <form onSubmit={(e: FormEvent) => { e.preventDefault(); handleAuthAction(isSignUp); }}>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor={isSignUp ? "signup-email" : "signin-email"}>Email</Label>
-          <Input id={isSignUp ? "signup-email" : "signin-email"} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={isSignUp ? "signup-password" : "signin-password"}>Password</Label>
-          <Input id={isSignUp ? "signup-password" : "signin-password"} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </div>
-        <Button type="submit" disabled={loading} className="w-full">
-           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isSignUp ? "Sign Up" : "Sign In"}
-        </Button>
-      </div>
-    </form>
-  );
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -95,7 +112,15 @@ export default function AuthPage() {
                     <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <AuthForm isSignUp={false} />
+                    <AuthForm 
+                        isSignUp={false} 
+                        handleAuthAction={handleAuthAction} 
+                        loading={loading}
+                        email={email}
+                        setEmail={setEmail}
+                        password={password}
+                        setPassword={setPassword}
+                    />
                 </CardContent>
             </Card>
         </TabsContent>
@@ -106,7 +131,15 @@ export default function AuthPage() {
                     <CardDescription>Create an account to get started.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <AuthForm isSignUp={true} />
+                    <AuthForm 
+                        isSignUp={true} 
+                        handleAuthAction={handleAuthAction}
+                        loading={loading}
+                        email={email}
+                        setEmail={setEmail}
+                        password={password}
+                        setPassword={setPassword}
+                    />
                 </CardContent>
             </Card>
         </TabsContent>

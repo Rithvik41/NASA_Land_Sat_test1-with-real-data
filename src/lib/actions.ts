@@ -4,7 +4,7 @@ import { generateDataInsights } from "@/ai/flows/generate-insights";
 import { generateReportSummary } from "@/ai/flows/generate-report-summary";
 import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
 import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
-import type { MetricData } from "@/lib/types";
+import type { MetricData, SatellitePassData } from "@/lib/types";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
   try {
@@ -60,12 +60,12 @@ export async function generateReportAction(
   }
 }
 
-export async function predictSatellitePassAction(input: { latitude: number; longitude: number; }) {
+export async function predictSatellitePassAction(input: { latitude: number; longitude: number; }): Promise<{data: SatellitePassData | null, error: string | null}> {
     try {
         const result = await predictSatellitePass(input);
-        return { data: result };
+        return { data: result, error: null };
     } catch (error) {
         console.error(error);
-        return { error: "Failed to predict satellite pass. Please try again." };
+        return { data: null, error: "Failed to predict satellite pass. Please try again." };
     }
 }

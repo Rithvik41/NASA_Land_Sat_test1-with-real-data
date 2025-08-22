@@ -18,3 +18,10 @@ export interface MetricData {
   insight?: string;
   groundTruth?: GroundTruthDataPoint[];
 }
+
+export interface SatellitePassData {
+    passTime: string;
+    satelliteName: string;
+    status: string;
+    speed: number;
+}
