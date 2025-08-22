@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { addDays, format } from "date-fns";
+import React, { useState, useCallback, useEffect } from "react";
+import { addDays, format, differenceInMilliseconds } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { InputPanel } from "@/components/input-panel";
 import { SummaryCards } from "@/components/summary-cards";
@@ -68,6 +68,38 @@ export function Dashboard() {
   const [selectedMetric, setSelectedMetric] = useState<string>("NDVI");
   const [nextPass, setNextPass] = useState<string | null>(null);
   const [isFetchingPass, setIsFetchingPass] = useState(false);
+
+  useEffect(() => {
+    // Request notification permission when component mounts
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!nextPass || !("Notification" in window) || Notification.permission !== "granted") {
+      return;
+    }
+
+    const passTime = new Date(nextPass);
+    const now = new Date();
+    // Notify 1 minute before the pass
+    const notificationTime = passTime.getTime() - 60000;
+    const delay = notificationTime - now.getTime();
+
+    if (delay > 0) {
+      const timerId = setTimeout(() => {
+        new Notification("Satellite Alert", {
+          body: `A satellite will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
+          icon: "/satellite.png", // Assumes you have a satellite icon in your public folder
+        });
+      }, delay);
+
+      // Cleanup timeout if component unmounts or nextPass changes
+      return () => clearTimeout(timerId);
+    }
+  }, [nextPass, lat, lon]);
+
 
   const fetchNextPass = useCallback(async (latitude: string, longitude: string) => {
       setIsFetchingPass(true);
