@@ -12,7 +12,10 @@ const firebaseConfig = {
 };
 
 // Check if all required environment variables are present
-const allVarsPresent = Object.values(firebaseConfig).every(Boolean);
+const allVarsPresent =
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId;
 
 if (!allVarsPresent) {
     console.error("Firebase config is missing. Make sure to set all NEXT_PUBLIC_FIREBASE_ environment variables in your .env file.");
