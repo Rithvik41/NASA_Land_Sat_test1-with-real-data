@@ -176,12 +176,6 @@ export function Dashboard() {
     }, 1500);
   }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
   
-  useEffect(() => {
-    // Initial fetch on component mount
-    handleCompute()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
     setMetrics(updatedMetrics);
