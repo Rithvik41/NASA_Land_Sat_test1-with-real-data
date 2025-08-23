@@ -93,6 +93,7 @@ export function Dashboard() {
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [activeComputation, setActiveComputation] = useState(false);
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -126,10 +127,13 @@ export function Dashboard() {
   }, [nextPass, lat, lon, notificationsEnabled]);
 
 
-  const fetchNextPass = useCallback(async (latitude: string, longitude: string) => {
-      if (!latitude || !longitude) return;
+  const fetchNextPass = useCallback(async () => {
+      if (!lat || !lon) {
+           toast({ title: "Coordinates missing", description: "Please enter latitude and longitude.", variant: "destructive" });
+           return;
+      }
       setIsFetchingPass(true);
-      const result = await predictSatellitePassAction({ latitude: parseFloat(latitude), longitude: parseFloat(longitude) });
+      const result = await predictSatellitePassAction({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
       if (result.error) {
           toast({ title: "AI Error", description: result.error, variant: "destructive" });
           setNextPass(null);
@@ -137,12 +141,15 @@ export function Dashboard() {
           setNextPass(result.data);
       }
       setIsFetchingPass(false);
-  }, [toast]);
+  }, [lat, lon, toast]);
 
-  const fetchWeather = useCallback(async (latitude: string, longitude: string) => {
-    if (!latitude || !longitude) return;
+  const fetchWeather = useCallback(async () => {
+    if (!lat || !lon) {
+        toast({ title: "Coordinates missing", description: "Please enter latitude and longitude.", variant: "destructive" });
+        return;
+    }
     setIsFetchingWeather(true);
-    const result = await getWeatherReportAction({ latitude: parseFloat(latitude), longitude: parseFloat(longitude) });
+    const result = await getWeatherReportAction({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
     if (result.error) {
       toast({ title: "AI Error", description: result.error, variant: "destructive" });
       setWeather(null);
@@ -150,7 +157,7 @@ export function Dashboard() {
       setWeather(result.data);
     }
     setIsFetchingWeather(false);
-  }, [toast]);
+  }, [lat, lon, toast]);
   
   const handleHistorySelect = (entry: HistoryEntry) => {
     setLat(entry.lat);
@@ -171,14 +178,10 @@ export function Dashboard() {
     }
 
     setIsComputing(true);
+    setActiveComputation(true);
     setMetrics([]);
     setNextPass(null);
     setWeather(null);
-
-    // Stagger AI calls
-    await fetchNextPass(lat, lon);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Short delay
-    await fetchWeather(lat, lon);
     
     const newHistoryEntry: HistoryEntry = {
       id: new Date().toISOString(),
@@ -198,7 +201,7 @@ export function Dashboard() {
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
     }, 1000);
-  }, [lat, lon, locationDesc, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
+  }, [lat, lon, locationDesc, dateRange, groundTruthData, toast]);
   
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
@@ -239,13 +242,13 @@ export function Dashboard() {
         </div>
       )}
       
-      {!isComputing && metrics.length === 0 && (
+      {!activeComputation && (
           <div className="text-center py-16 text-muted-foreground">
               <p>Enter coordinates and click "Compute Metrics" to get started.</p>
           </div>
       )}
 
-      {metrics.length > 0 && (
+      {activeComputation && metrics.length > 0 && (
         <>
           <div className="grid gap-6 lg:grid-cols-4">
             <div className="lg:col-span-3">
@@ -253,10 +256,16 @@ export function Dashboard() {
                 metrics={metrics} 
                 nextPass={nextPass}
                 isFetchingPass={isFetchingPass}
+                onFetchPass={fetchNextPass}
               />
             </div>
             <div className="lg:col-span-1">
-                <WeatherReport weather={weather} isLoading={isFetchingWeather} showForecast={false} />
+                <WeatherReport 
+                    weather={weather} 
+                    isLoading={isFetchingWeather} 
+                    showForecast={false}
+                    onFetchWeather={fetchWeather}
+                />
             </div>
           </div>
 

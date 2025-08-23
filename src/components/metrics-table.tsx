@@ -72,8 +72,7 @@ export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: 
   const getInsight = async (metricName: string) => {
     if (insightLoading) return; // Prevent multiple requests
     setInsightLoading(metricName);
-    await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
-
+    
     const metric = metrics.find(m => m.name === metricName);
     if (metric) {
       const result = await generateInsightAction(metric);

@@ -1,10 +1,12 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, TrendingUp, Droplets, Leaf, Home, Mountain, Satellite, Loader2, CircleDotDashed, Rocket } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, Droplets, Leaf, Home, Mountain, Satellite, Loader2, CircleDotDashed, Rocket, RefreshCw } from "lucide-react";
 import type { MetricData, SatellitePassData } from "@/lib/types";
 import { format, formatDistanceToNow } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
+import { Button } from "./ui/button";
 
 const metricIcons: { [key: string]: React.ReactNode } = {
   NDVI: <Leaf className="h-4 w-4 text-muted-foreground" />,
@@ -26,13 +28,13 @@ function getMetricCardData(metrics: MetricData[]) {
 }
 
 
-export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: MetricData[], nextPass: SatellitePassData | null, isFetchingPass: boolean }) {
+export function SummaryCards({ metrics, nextPass, isFetchingPass, onFetchPass }: { metrics: MetricData[], nextPass: SatellitePassData | null, isFetchingPass: boolean, onFetchPass: () => void }) {
   const cardData = getMetricCardData(metrics);
 
   const renderNextPass = () => {
     if (isFetchingPass) {
         return (
-            <div className="flex items-center text-sm text-muted-foreground">
+            <div className="flex items-center text-sm text-muted-foreground h-[92px]">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Fetching pass time...</span>
             </div>
@@ -57,7 +59,14 @@ export function SummaryCards({ metrics, nextPass, isFetchingPass }: { metrics: M
              </div>
         )
     }
-    return <div className="text-2xl font-bold">N/A</div>;
+    return (
+        <div className="flex flex-col items-center justify-center text-center h-[92px]">
+            <p className="text-sm text-muted-foreground mb-2">Fetch satellite pass data.</p>
+            <Button onClick={onFetchPass} size="sm" variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" /> Fetch Next Pass
+            </Button>
+        </div>
+    )
   }
 
   return (

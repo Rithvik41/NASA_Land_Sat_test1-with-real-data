@@ -6,11 +6,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import * as LucideIcons from "lucide-react";
 import type { WeatherData, HourlyForecast } from "@/lib/types";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
+import { Button } from "./ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface WeatherReportProps {
     weather: WeatherData | null;
     isLoading?: boolean;
     showForecast?: boolean;
+    onFetchWeather?: () => void;
 }
 
 // A type guard to check if a string is a valid Lucide icon name
@@ -23,7 +26,7 @@ const Icon = ({ name, ...props }: {name: string, [key: string]: any}) => {
     return <IconComponent {...props} />;
 }
 
-export function WeatherReport({ weather, isLoading, showForecast = true }: WeatherReportProps) {
+export function WeatherReport({ weather, isLoading, showForecast = true, onFetchWeather }: WeatherReportProps) {
   if (isLoading) {
     return <Skeleton className="h-full w-full min-h-[160px]" />;
   }
@@ -31,8 +34,13 @@ export function WeatherReport({ weather, isLoading, showForecast = true }: Weath
   if (!weather) {
     return (
       <Card className="h-full flex items-center justify-center min-h-[160px]">
-        <CardContent className="pt-6">
-          <p className="text-muted-foreground text-center">No weather data available.</p>
+        <CardContent className="pt-6 text-center">
+          <p className="text-muted-foreground mb-2">No weather data.</p>
+           {onFetchWeather && (
+             <Button onClick={onFetchWeather} size="sm" variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" /> Fetch Weather
+            </Button>
+           )}
         </CardContent>
       </Card>
     );
