@@ -25,3 +25,11 @@ export interface SatellitePassData {
     status: string;
     speed: number;
 }
+
+export interface WeatherData {
+    temperature: number;
+    conditions: string;
+    humidity: number;
+    windSpeed: number;
+    iconName: string;
+}

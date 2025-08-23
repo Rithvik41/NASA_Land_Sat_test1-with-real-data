@@ -4,7 +4,8 @@ import { generateDataInsights } from "@/ai/flows/generate-insights";
 import { generateReportSummary } from "@/ai/flows/generate-report-summary";
 import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
 import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
-import type { MetricData, SatellitePassData } from "@/lib/types";
+import { getWeatherReport } from "@/ai/flows/get-weather-report";
+import type { MetricData, SatellitePassData, WeatherData } from "@/lib/types";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
   try {
@@ -67,5 +68,15 @@ export async function predictSatellitePassAction(input: { latitude: number; long
     } catch (error) {
         console.error(error);
         return { data: null, error: "Failed to predict satellite pass. Please try again." };
+    }
+}
+
+export async function getWeatherReportAction(input: { latitude: number; longitude: number; }): Promise<{data: WeatherData | null, error: string | null}> {
+    try {
+        const result = await getWeatherReport(input);
+        return { data: result, error: null };
+    } catch (error) {
+        console.error(error);
+        return { data: null, error: "Failed to get weather report. Please try again." };
     }
 }

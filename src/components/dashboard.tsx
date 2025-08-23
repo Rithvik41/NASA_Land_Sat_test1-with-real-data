@@ -8,10 +8,11 @@ import { InputPanel } from "@/components/input-panel";
 import { SummaryCards } from "@/components/summary-cards";
 import { MetricsTable } from "@/components/metrics-table";
 import { Visualizations } from "@/components/visualizations";
+import { WeatherReport } from "@/components/weather-report";
 import { useToast } from "@/hooks/use-toast";
-import type { MetricData, GroundTruthDataPoint, SatellitePassData } from "@/lib/types";
+import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { predictSatellitePassAction } from "@/lib/actions";
+import { predictSatellitePassAction, getWeatherReportAction } from "@/lib/actions";
 
 // Mock data generation
 const metricNames = [
@@ -88,6 +89,8 @@ export function Dashboard() {
   const [selectedMetric, setSelectedMetric] = useState<string>("NDVI");
   const [nextPass, setNextPass] = useState<SatellitePassData | null>(null);
   const [isFetchingPass, setIsFetchingPass] = useState(false);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isFetchingWeather, setIsFetchingWeather] = useState(false);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
@@ -130,6 +133,19 @@ export function Dashboard() {
       setIsFetchingPass(false);
   }, [toast]);
 
+  const fetchWeather = useCallback(async (latitude: string, longitude: string) => {
+    if (!latitude || !longitude) return;
+    setIsFetchingWeather(true);
+    const result = await getWeatherReportAction({ latitude: parseFloat(latitude), longitude: parseFloat(longitude) });
+    if (result.error) {
+      toast({ title: "AI Error", description: result.error, variant: "destructive" });
+      setWeather(null);
+    } else if (result.data) {
+      setWeather(result.data);
+    }
+    setIsFetchingWeather(false);
+  }, [toast]);
+
   const handleCompute = useCallback(() => {
     if (!lat || !lon) {
       toast({ title: "Error", description: "Please provide valid latitude and longitude.", variant: "destructive" });
@@ -142,7 +158,9 @@ export function Dashboard() {
 
     setIsComputing(true);
     setNextPass(null);
+    setWeather(null);
     fetchNextPass(lat, lon);
+    fetchWeather(lat, lon);
 
     setTimeout(() => {
       const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
@@ -151,13 +169,14 @@ export function Dashboard() {
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
     }, 1500);
-  }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass]);
+  }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
   
   useEffect(() => {
     if (lat && lon) {
         fetchNextPass(lat, lon);
+        fetchWeather(lat, lon);
     }
-  }, [lat, lon, fetchNextPass]);
+  }, [lat, lon, fetchNextPass, fetchWeather]);
 
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
@@ -204,11 +223,19 @@ export function Dashboard() {
 
       {!isComputing && metrics.length > 0 && (
         <>
-          <SummaryCards 
-            metrics={metrics} 
-            nextPass={nextPass}
-            isFetchingPass={isFetchingPass}
-          />
+          <div className="grid gap-6 lg:grid-cols-4">
+            <div className="lg:col-span-3">
+              <SummaryCards 
+                metrics={metrics} 
+                nextPass={nextPass}
+                isFetchingPass={isFetchingPass}
+              />
+            </div>
+            <div className="lg:col-span-1">
+                <WeatherReport weather={weather} isLoading={isFetchingWeather} />
+            </div>
+          </div>
+
           <MetricsTable 
             metrics={metrics} 
             onMetricsUpdate={onMetricsUpdate} 
