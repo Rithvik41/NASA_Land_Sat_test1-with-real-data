@@ -7,6 +7,8 @@ export const ChatMessageSchema = z.object({
   content: z.string(),
 });
 
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+
 export interface DataPoint {
   date: string; // Should be a date string that can be parsed by new Date()
   value: number;
@@ -62,9 +64,6 @@ export interface HistoryEntry {
   dateRange?: DateRange;
   timestamp: Date;
 }
-
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
-
 
 export interface Crop {
     name: string;

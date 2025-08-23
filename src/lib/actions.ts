@@ -1,3 +1,4 @@
+
 "use server";
 
 import { generateDataInsights } from "@/ai/flows/generate-insights";
@@ -9,7 +10,7 @@ import { chatbot } from "@/ai/flows/chatbot";
 import { planCrops } from "@/ai/flows/plan-crops";
 import { scheduleIrrigation } from "@/ai/flows/schedule-irrigation";
 
-import type { MetricData, SatellitePassData, WeatherData, ChatMessage, CropPlan, IrrigationSchedule } from "@/lib/types";
+import type { MetricData, SatellitePassData, WeatherData, CropPlan, IrrigationSchedule } from "@/lib/types";
 import type { ChatbotInput, ChatbotOutput } from "@/ai/flows/chatbot";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
