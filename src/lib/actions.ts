@@ -13,13 +13,20 @@ import { scheduleIrrigation } from "@/ai/flows/schedule-irrigation";
 import type { MetricData, SatellitePassData, WeatherData, CropPlan, IrrigationSchedule } from "@/lib/types";
 import type { ChatbotInput, ChatbotOutput } from "@/ai/flows/chatbot";
 
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
+
 export async function suggestCoordinatesAction(locationDescription: string) {
   try {
     const result = await suggestCoordinates({ locationDescription });
     return { data: result };
   } catch (error) {
-    console.error(error);
-    return { error: "Failed to suggest coordinates. Please try again." };
+    console.error("suggestCoordinatesAction Error:", error);
+    return { error: `AI Error: ${getErrorMessage(error)}` };
   }
 }
 
@@ -36,8 +43,8 @@ export async function generateInsightAction(
     });
     return { data: result.insight };
   } catch (error) {
-    console.error(error);
-    return { error: "Failed to generate insight. Please try again." };
+    console.error("generateInsightAction Error:", error);
+    return { error: `AI Error: ${getErrorMessage(error)}` };
   }
 }
 
@@ -62,8 +69,8 @@ export async function generateReportAction(
     });
     return { data: result.summaryReport };
   } catch (error) {
-    console.error(error);
-    return { error: "Failed to generate summary report. Please try again." };
+    console.error("generateReportAction Error:", error);
+    return { error: `AI Error: ${getErrorMessage(error)}` };
   }
 }
 
@@ -72,8 +79,8 @@ export async function predictSatellitePassAction(input: { latitude: number; long
         const result = await predictSatellitePass(input);
         return { data: result, error: null };
     } catch (error) {
-        console.error(error);
-        return { data: null, error: "Failed to predict satellite pass. Please try again." };
+        console.error("predictSatellitePassAction Error:", error);
+        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
     }
 }
 
@@ -82,8 +89,8 @@ export async function getWeatherReportAction(input: { latitude: number; longitud
         const result = await getWeatherReport(input);
         return { data: result, error: null };
     } catch (error) {
-        console.error(error);
-        return { data: null, error: "Failed to get weather report. Please try again." };
+        console.error("getWeatherReportAction Error:", error);
+        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
     }
 }
 
@@ -93,7 +100,7 @@ export async function chatbotAction(input: ChatbotInput): Promise<{ data: Chatbo
         return { data: result, error: null };
     } catch (error) {
         console.error("Chatbot action error:", error);
-        return { data: null, error: "An error occurred while communicating with the chatbot." };
+        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
     }
 }
 
@@ -103,7 +110,7 @@ export async function planCropsAction(input: { latitude: number; longitude: numb
         return { data: result, error: null };
     } catch (error) {
         console.error("Crop planning action error:", error);
-        return { data: null, error: "An error occurred while generating the crop plan." };
+        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
     }
 }
 
@@ -113,6 +120,6 @@ export async function scheduleIrrigationAction(input: { latitude: number; longit
         return { data: result, error: null };
     } catch (error) {
         console.error("Irrigation scheduling action error:", error);
-        return { data: null, error: "An error occurred while generating the irrigation schedule." };
+        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
     }
 }
