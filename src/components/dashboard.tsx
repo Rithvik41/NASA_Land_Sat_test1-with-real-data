@@ -91,33 +91,38 @@ export function Dashboard() {
   const [isFetchingPass, setIsFetchingPass] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
-    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-      Notification.requestPermission();
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        setNotificationsEnabled(true);
+      }
     }
   }, []);
 
   useEffect(() => {
-    if (!nextPass || !("Notification" in window) || Notification.permission !== "granted") {
+    if (!nextPass || !notificationsEnabled || !("Notification" in window) || Notification.permission !== "granted") {
       return;
     }
 
     const passTime = new Date(nextPass.passTime);
     const now = new Date();
-    const notificationTime = passTime.getTime() - 60000;
+    // Notify 1 minute before the pass
+    const notificationTime = passTime.getTime() - 60000; 
     const delay = notificationTime - now.getTime();
 
     if (delay > 0) {
       const timerId = setTimeout(() => {
         new Notification("Satellite Alert", {
           body: `Satellite ${nextPass.satelliteName} will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
+          icon: "/favicon.ico", // Optional: add an icon
         });
       }, delay);
 
       return () => clearTimeout(timerId);
     }
-  }, [nextPass, lat, lon]);
+  }, [nextPass, lat, lon, notificationsEnabled]);
 
 
   const fetchNextPass = useCallback(async (latitude: string, longitude: string) => {
@@ -172,11 +177,10 @@ export function Dashboard() {
   }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
   
   useEffect(() => {
-    if (lat && lon) {
-        fetchNextPass(lat, lon);
-        fetchWeather(lat, lon);
-    }
-  }, [lat, lon, fetchNextPass, fetchWeather]);
+    // Initial fetch on component mount
+    handleCompute()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
