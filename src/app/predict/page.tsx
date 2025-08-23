@@ -212,6 +212,7 @@ export default function PredictPage() {
                                 <div>
                                     <h4 className="font-semibold">Recommendation</h4>
                                     <p className="text-2xl font-bold text-primary">{irrigationSchedule.recommendation}</p>
+
                                 </div>
                                 <div>
                                     <h4 className="font-semibold">Next Recommended Irrigation</h4>
