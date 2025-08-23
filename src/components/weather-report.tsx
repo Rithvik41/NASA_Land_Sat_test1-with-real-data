@@ -10,6 +10,7 @@ import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 interface WeatherReportProps {
     weather: WeatherData | null;
     isLoading?: boolean;
+    showForecast?: boolean;
 }
 
 // A type guard to check if a string is a valid Lucide icon name
@@ -22,14 +23,14 @@ const Icon = ({ name, ...props }: {name: string, [key: string]: any}) => {
     return <IconComponent {...props} />;
 }
 
-export function WeatherReport({ weather, isLoading }: WeatherReportProps) {
+export function WeatherReport({ weather, isLoading, showForecast = true }: WeatherReportProps) {
   if (isLoading) {
-    return <Skeleton className="h-full w-full min-h-[260px]" />;
+    return <Skeleton className="h-full w-full min-h-[160px]" />;
   }
 
   if (!weather) {
     return (
-      <Card className="h-full flex items-center justify-center min-h-[260px]">
+      <Card className="h-full flex items-center justify-center min-h-[160px]">
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-center">No weather data available.</p>
         </CardContent>
@@ -42,16 +43,15 @@ export function WeatherReport({ weather, isLoading }: WeatherReportProps) {
   return (
     <Card>
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl">Weather Forecast</CardTitle>
-        <CardDescription>{summary}</CardDescription>
+        <CardTitle className="text-xl">Weather</CardTitle>
+        <CardDescription>{showForecast ? summary : current.conditions}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-start justify-between gap-8 mb-6">
+        <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
-                <Icon name={current.iconName} className="h-16 w-16 text-primary" />
+                <Icon name={current.iconName} className="h-12 w-12 text-primary" />
                 <div>
-                     <div className="text-5xl font-bold">{current.temperature.toFixed(0)}°C</div>
-                     <p className="text-lg text-muted-foreground">{current.conditions}</p>
+                     <div className="text-4xl font-bold">{current.temperature.toFixed(0)}°C</div>
                 </div>
             </div>
             <div className="space-y-2 text-sm text-right">
@@ -66,20 +66,23 @@ export function WeatherReport({ weather, isLoading }: WeatherReportProps) {
             </div>
         </div>
 
-        <h4 className="font-semibold mb-2">Hourly Forecast</h4>
-        <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-4 pb-4">
-            {forecast.map((hour: HourlyForecast) => (
-                <div key={hour.time} className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg bg-muted/50 min-w-[80px]">
-                    <p className="text-sm font-medium">{hour.time}</p>
-                    <Icon name={hour.iconName} className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-lg font-bold">{hour.temperature.toFixed(0)}°C</p>
-                </div>
-            ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-
+        {showForecast && (
+            <>
+                <h4 className="font-semibold mb-2">Hourly Forecast</h4>
+                <ScrollArea className="w-full whitespace-nowrap">
+                    <div className="flex space-x-4 pb-4">
+                    {forecast.map((hour: HourlyForecast) => (
+                        <div key={hour.time} className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg bg-muted/50 min-w-[80px]">
+                            <p className="text-sm font-medium">{hour.time}</p>
+                            <Icon name={hour.iconName} className="h-8 w-8 text-muted-foreground" />
+                            <p className="text-lg font-bold">{hour.temperature.toFixed(0)}°C</p>
+                        </div>
+                    ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+            </>
+        )}
       </CardContent>
     </Card>
   );

@@ -126,7 +126,7 @@ export default function PredictPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2"><Thermometer/> Weather Forecast</CardTitle>
-                                <CardDescription>Get the current weather report for your location.</CardDescription>
+                                <CardDescription>Get the current weather and a 24-hour forecast.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Button onClick={() => handlePrediction('weather')} disabled={!!isLoading}>
@@ -172,7 +172,7 @@ export default function PredictPage() {
                     )}
 
                     {weather && (
-                        <WeatherReport weather={weather} />
+                        <WeatherReport weather={weather} showForecast={true} />
                     )}
 
                     {cropPlan && (
@@ -216,6 +216,7 @@ export default function PredictPage() {
                                 <div>
                                     <h4 className="font-semibold">Next Recommended Irrigation</h4>
                                     <p className="text-muted-foreground">{new Date(irrigationSchedule.nextIrrigationDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+
                                 </div>
                                  <div>
                                     <h4 className="font-semibold">Watering Depth</h4>

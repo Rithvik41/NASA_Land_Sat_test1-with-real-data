@@ -252,7 +252,7 @@ export function Dashboard() {
               />
             </div>
             <div className="lg:col-span-1">
-                <WeatherReport weather={weather} isLoading={isFetchingWeather} />
+                <WeatherReport weather={weather} isLoading={isFetchingWeather} showForecast={false} />
             </div>
           </div>
 
