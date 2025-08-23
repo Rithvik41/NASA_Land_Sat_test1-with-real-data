@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -7,9 +8,9 @@ import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { MessageSquare, Send, X, Loader2, Bot } from 'lucide-react';
 import { chatbotAction } from '@/lib/actions';
-import type { ChatMessage } from '@/ai/flows/chatbot';
+import type { ChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 
 export function Chatbot() {
@@ -20,12 +21,12 @@ export function Chatbot() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && messages.length === 0) {
       setMessages([
         { role: 'model', content: "Hello! I'm the Earth Insights assistant. How can I help you today?" }
       ]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -71,7 +72,7 @@ export function Chatbot() {
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
-          <CardContent className="flex-1 p-0">
+          <CardContent className="flex-1 p-0 overflow-y-auto">
             <ScrollArea className="h-full" ref={scrollAreaRef as any}>
                 <div className="p-4 space-y-4">
               {messages.map((message, index) => (
@@ -95,10 +96,13 @@ export function Chatbot() {
                 </div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="p-3 rounded-lg bg-muted">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
+                 <div className="flex items-start gap-3 justify-start">
+                    <Avatar className="w-8 h-8">
+                        <AvatarFallback><Bot /></AvatarFallback>
+                    </Avatar>
+                    <div className="p-3 rounded-lg bg-muted flex items-center justify-center">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
                 </div>
               )}
               </div>
@@ -110,7 +114,7 @@ export function Chatbot() {
                 placeholder="Type your message..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
                 disabled={isLoading}
               />
               <Button onClick={handleSend} disabled={isLoading}>
