@@ -160,7 +160,7 @@ export function Dashboard() {
     toast({ title: "Loaded from history", description: `Loaded settings for ${entry.locationDesc}`});
   };
 
-  const handleCompute = useCallback(() => {
+  const handleCompute = useCallback(async () => {
     if (!lat || !lon) {
       toast({ title: "Error", description: "Please provide valid latitude and longitude.", variant: "destructive" });
       return;
@@ -171,10 +171,14 @@ export function Dashboard() {
     }
 
     setIsComputing(true);
+    setMetrics([]);
     setNextPass(null);
     setWeather(null);
-    fetchNextPass(lat, lon);
-    fetchWeather(lat, lon);
+
+    // Stagger AI calls
+    await fetchNextPass(lat, lon);
+    await new Promise(resolve => setTimeout(resolve, 500)); // Short delay
+    await fetchWeather(lat, lon);
     
     const newHistoryEntry: HistoryEntry = {
       id: new Date().toISOString(),
@@ -193,7 +197,7 @@ export function Dashboard() {
       setSelectedMetric('NDVI'); // Reset to default metric on new computation
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
-    }, 1500);
+    }, 1000);
   }, [lat, lon, locationDesc, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
   
 
@@ -223,7 +227,7 @@ export function Dashboard() {
         onHistorySelect={handleHistorySelect}
       />
 
-      {isComputing && (
+      {(isComputing && metrics.length === 0) && (
         <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Skeleton className="h-28" />
@@ -241,7 +245,7 @@ export function Dashboard() {
           </div>
       )}
 
-      {!isComputing && metrics.length > 0 && (
+      {metrics.length > 0 && (
         <>
           <div className="grid gap-6 lg:grid-cols-4">
             <div className="lg:col-span-3">

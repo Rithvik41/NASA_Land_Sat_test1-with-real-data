@@ -70,7 +70,10 @@ export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: 
   };
 
   const getInsight = async (metricName: string) => {
+    if (insightLoading) return; // Prevent multiple requests
     setInsightLoading(metricName);
+    await new Promise(resolve => setTimeout(resolve, 500)); // Add a small delay
+
     const metric = metrics.find(m => m.name === metricName);
     if (metric) {
       const result = await generateInsightAction(metric);
@@ -149,7 +152,7 @@ export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: 
                   <TooltipProvider>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => !metric.insight && getInsight(metric.name)}>
+                        <Button variant="ghost" size="icon" onClick={() => !metric.insight && getInsight(metric.name)} disabled={!!insightLoading}>
                           {insightLoading === metric.name ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                         </Button>
                       </PopoverTrigger>
@@ -162,7 +165,7 @@ export function MetricsTable({ metrics, onMetricsUpdate, location, dateRange }: 
                           <div className="grid gap-4">
                             <div className="space-y-2">
                               <h4 className="font-medium leading-none">AI Insight</h4>
-                              <p className="text-sm text-muted-foreground">{metric.insight || "Click to generate an insight."}</p>
+                              <p className="text-sm text-muted-foreground">{metric.insight || "Click the wand to generate an AI insight."}</p>
                             </div>
                           </div>
                         )}
