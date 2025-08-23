@@ -1,5 +1,7 @@
 
 import type { DateRange } from "react-day-picker";
+import type { ChatMessageSchema } from "@/ai/flows/chatbot";
+import { z } from "zod";
 
 export interface DataPoint {
   date: string; // Should be a date string that can be parsed by new Date()
@@ -45,3 +47,5 @@ export interface HistoryEntry {
   dateRange?: DateRange;
   timestamp: Date;
 }
+
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;

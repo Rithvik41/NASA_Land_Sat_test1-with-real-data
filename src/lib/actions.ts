@@ -5,7 +5,9 @@ import { generateReportSummary } from "@/ai/flows/generate-report-summary";
 import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
 import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
 import { getWeatherReport } from "@/ai/flows/get-weather-report";
+import { chatbot } from "@/ai/flows/chatbot";
 import type { MetricData, SatellitePassData, WeatherData } from "@/lib/types";
+import type { ChatbotInput, ChatbotOutput } from "@/ai/flows/chatbot";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
   try {
@@ -78,5 +80,15 @@ export async function getWeatherReportAction(input: { latitude: number; longitud
     } catch (error) {
         console.error(error);
         return { data: null, error: "Failed to get weather report. Please try again." };
+    }
+}
+
+export async function chatbotAction(input: ChatbotInput): Promise<{ data: ChatbotOutput | null; error: string | null; }> {
+    try {
+        const result = await chatbot(input);
+        return { data: result, error: null };
+    } catch (error) {
+        console.error("Chatbot action error:", error);
+        return { data: null, error: "An error occurred while communicating with the chatbot." };
     }
 }
