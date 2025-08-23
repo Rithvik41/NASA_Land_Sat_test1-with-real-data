@@ -6,7 +6,10 @@ import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
 import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
 import { getWeatherReport } from "@/ai/flows/get-weather-report";
 import { chatbot } from "@/ai/flows/chatbot";
-import type { MetricData, SatellitePassData, WeatherData, ChatMessage } from "@/lib/types";
+import { planCrops } from "@/ai/flows/plan-crops";
+import { scheduleIrrigation } from "@/ai/flows/schedule-irrigation";
+
+import type { MetricData, SatellitePassData, WeatherData, ChatMessage, CropPlan, IrrigationSchedule } from "@/lib/types";
 import type { ChatbotInput, ChatbotOutput } from "@/ai/flows/chatbot";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
@@ -90,5 +93,25 @@ export async function chatbotAction(input: ChatbotInput): Promise<{ data: Chatbo
     } catch (error) {
         console.error("Chatbot action error:", error);
         return { data: null, error: "An error occurred while communicating with the chatbot." };
+    }
+}
+
+export async function planCropsAction(input: { latitude: number; longitude: number; }): Promise<{ data: CropPlan | null; error: string | null; }> {
+    try {
+        const result = await planCrops(input);
+        return { data: result, error: null };
+    } catch (error) {
+        console.error("Crop planning action error:", error);
+        return { data: null, error: "An error occurred while generating the crop plan." };
+    }
+}
+
+export async function scheduleIrrigationAction(input: { latitude: number; longitude: number; }): Promise<{ data: IrrigationSchedule | null; error: string | null; }> {
+    try {
+        const result = await scheduleIrrigation(input);
+        return { data: result, error: null };
+    } catch (error) {
+        console.error("Irrigation scheduling action error:", error);
+        return { data: null, error: "An error occurred while generating the irrigation schedule." };
     }
 }

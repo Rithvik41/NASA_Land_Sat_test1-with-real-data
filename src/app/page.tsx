@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
-import { Cpu, BarChart, Download, SlidersHorizontal, CheckCircle, ArrowRight } from "lucide-react";
+import { Cpu, BarChart, Download, SlidersHorizontal, CheckCircle, ArrowRight, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
 import { GeometricBackground } from "@/components/geometric-background";
@@ -43,8 +43,8 @@ export default function LandingPage() {
                    <Button asChild size="lg" className="bg-primary/90 hover:bg-primary text-primary-foreground hover:scale-105 transition-transform duration-300 shadow-lg">
                     <Link href="/dashboard">Get Started <ArrowRight className="ml-2 h-5 w-5" /></Link>
                   </Button>
-                  <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-black transition-colors" onClick={scrollToFeatures}>
-                    Learn More
+                  <Button asChild size="lg" variant="secondary" className="hover:scale-105 transition-transform duration-300 shadow-lg">
+                    <Link href="/predict">Predictive Tools <BrainCircuit className="ml-2 h-5 w-5" /></Link>
                   </Button>
                 </div>
               </div>

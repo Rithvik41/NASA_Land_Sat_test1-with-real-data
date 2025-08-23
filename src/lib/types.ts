@@ -53,3 +53,26 @@ export interface HistoryEntry {
 }
 
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+
+
+export interface Crop {
+    name: string;
+    reason: string;
+}
+
+export interface CropPlan {
+    suitableCrops: Crop[];
+    plantingWindow: {
+        start: string;
+        end: string;
+    };
+    cooperativeFarmingSuggestion: string;
+}
+
+
+export interface IrrigationSchedule {
+    recommendation: string;
+    nextIrrigationDate: string;
+    wateringDepthInches: number;
+    notes: string;
+}
