@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import React, { useState, useEffect } from "react";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { ContactSheet } from "./contact-sheet";
 
 const scrolltoHash = function (element_id: string) {
   const element = document.getElementById(element_id.replace('#', ''))
@@ -20,6 +21,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
+  const [isContactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,11 +76,9 @@ export function Header() {
                 </Link>
             </Button>
             <Button variant="link" asChild className={linkClass}>
-                <Link href={isLandingPage ? "#contact" : "/#contact"} onClick={(e) => {
-                     if (isLandingPage) {
-                        e.preventDefault();
-                        scrolltoHash("#contact");
-                    }
+                <Link href="#contact" onClick={(e) => {
+                     e.preventDefault();
+                     setContactOpen(true);
                 }}>
                     Contact
                 </Link>
@@ -109,6 +109,7 @@ export function Header() {
            </Button>
         </div>
       </div>
+      <ContactSheet open={isContactOpen} onOpenChange={setContactOpen} />
     </header>
   );
 }

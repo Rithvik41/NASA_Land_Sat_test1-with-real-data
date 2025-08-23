@@ -2,12 +2,16 @@
 "use client";
 
 import Link from "next/link";
+import React, { useState } from "react";
 import { Cpu, BarChart, Download, SlidersHorizontal, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/header";
 import { GeometricBackground } from "@/components/geometric-background";
+import { ContactSheet } from "@/components/contact-sheet";
 
 export default function LandingPage() {
+    const [isContactOpen, setContactOpen] = useState(false);
+
     const scrollToFeatures = () => {
         const featuresSection = document.getElementById('features');
         if(featuresSection) {
@@ -136,9 +140,10 @@ export default function LandingPage() {
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
             <Link href="#about" className="text-xs hover:underline underline-offset-4 text-muted-foreground" onClick={(e) => { e.preventDefault(); document.getElementById('about')?.scrollIntoView({behavior: 'smooth'})}}>About</Link>
-            <Link href="#contact" className="text-xs hover:underline underline-offset-4 text-muted-foreground" onClick={(e) => { e.preventDefault(); document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}}>Contact</Link>
+            <Link href="#contact" className="text-xs hover:underline underline-offset-4 text-muted-foreground" onClick={(e) => { e.preventDefault(); setContactOpen(true)}}>Contact</Link>
         </nav>
       </footer>
+      <ContactSheet open={isContactOpen} onOpenChange={setContactOpen} />
     </div>
   );
 }
