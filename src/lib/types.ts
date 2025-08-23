@@ -35,12 +35,23 @@ export interface SatellitePassData {
     speed: number;
 }
 
-export interface WeatherData {
+export interface HourlyForecast {
+    time: string;
     temperature: number;
     conditions: string;
-    humidity: number;
-    windSpeed: number;
     iconName: string;
+}
+
+export interface WeatherData {
+    current: {
+        temperature: number;
+        conditions: string;
+        humidity: number;
+        windSpeed: number;
+        iconName: string;
+    };
+    forecast: HourlyForecast[];
+    summary: string;
 }
 
 export interface HistoryEntry {

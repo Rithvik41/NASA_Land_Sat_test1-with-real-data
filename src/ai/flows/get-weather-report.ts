@@ -17,12 +17,23 @@ const GetWeatherReportInputSchema = z.object({
 });
 export type GetWeatherReportInput = z.infer<typeof GetWeatherReportInputSchema>;
 
-const GetWeatherReportOutputSchema = z.object({
-    temperature: z.number().describe('The current temperature in Celsius.'),
-    conditions: z.string().describe('A brief description of the current weather conditions (e.g., Sunny, Partly Cloudy).'),
-    humidity: z.number().describe('The current humidity percentage (0-100).'),
-    windSpeed: z.number().describe('The current wind speed in km/h.'),
+const HourlyForecastSchema = z.object({
+    time: z.string().describe("The time for the forecast (e.g., '10:00 AM', '3 PM')."),
+    temperature: z.number().describe('The temperature in Celsius.'),
+    conditions: z.string().describe('A brief description of the weather conditions (e.g., "Sunny").'),
     iconName: z.string().describe('The name of a relevant lucide-react icon (e.g., Sun, Cloudy, Wind, Umbrella).'),
+});
+
+const GetWeatherReportOutputSchema = z.object({
+    current: z.object({
+      temperature: z.number().describe('The current temperature in Celsius.'),
+      conditions: z.string().describe('A brief description of the current weather conditions (e.g., Sunny, Partly Cloudy).'),
+      humidity: z.number().describe('The current humidity percentage (0-100).'),
+      windSpeed: z.number().describe('The current wind speed in km/h.'),
+      iconName: z.string().describe('The name of a relevant lucide-react icon (e.g., Sun, Cloudy, Wind, Umbrella).'),
+    }),
+    forecast: z.array(HourlyForecastSchema).describe('An array of hourly forecast data for the next 24 hours.'),
+    summary: z.string().describe("A brief, one-sentence summary of the day's weather outlook (e.g., 'Expect clear skies and warm temperatures throughout the day.')."),
 });
 export type GetWeatherReportOutput = z.infer<typeof GetWeatherReportOutputSchema>;
 
@@ -34,14 +45,17 @@ const prompt = ai.definePrompt({
   name: 'getWeatherReportPrompt',
   input: {schema: GetWeatherReportInputSchema},
   output: {schema: GetWeatherReportOutputSchema},
-  prompt: `You are a weather reporting service. Given the coordinates, provide the current weather report.
+  prompt: `You are a weather reporting service. Given the coordinates, provide a detailed weather report for the entire day.
 
   The current date is ${new Date().toISOString()}.
 
+  Your response must include:
+  1. The current weather conditions (temperature, conditions, humidity, wind speed, and an icon).
+  2. An hourly forecast for the next 24 hours, starting from the current hour.
+  3. A concise summary of the day's weather.
+
   Latitude: {{{latitude}}}
   Longitude: {{{longitude}}}
-
-  Respond with the current temperature in Celsius, a brief description of conditions, humidity percentage, wind speed in km/h, and a suitable icon name from the lucide-react library.
 `,
 });
 

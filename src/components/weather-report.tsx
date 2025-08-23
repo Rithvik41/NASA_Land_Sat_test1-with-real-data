@@ -1,14 +1,15 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as LucideIcons from "lucide-react";
-import type { WeatherData } from "@/lib/types";
+import type { WeatherData, HourlyForecast } from "@/lib/types";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 interface WeatherReportProps {
     weather: WeatherData | null;
-    isLoading: boolean;
+    isLoading?: boolean;
 }
 
 // A type guard to check if a string is a valid Lucide icon name
@@ -16,14 +17,19 @@ function isValidIcon(name: string): name is keyof typeof LucideIcons {
   return name in LucideIcons;
 }
 
+const Icon = ({ name, ...props }: {name: string, [key: string]: any}) => {
+    const IconComponent = isValidIcon(name) ? LucideIcons[name] : LucideIcons.CloudQuestion;
+    return <IconComponent {...props} />;
+}
+
 export function WeatherReport({ weather, isLoading }: WeatherReportProps) {
   if (isLoading) {
-    return <Skeleton className="h-full w-full min-h-[160px]" />;
+    return <Skeleton className="h-full w-full min-h-[260px]" />;
   }
 
   if (!weather) {
     return (
-      <Card className="h-full flex items-center justify-center">
+      <Card className="h-full flex items-center justify-center min-h-[260px]">
         <CardContent className="pt-6">
           <p className="text-muted-foreground text-center">No weather data available.</p>
         </CardContent>
@@ -31,31 +37,49 @@ export function WeatherReport({ weather, isLoading }: WeatherReportProps) {
     );
   }
 
-  const IconComponent = isValidIcon(weather.iconName) ? LucideIcons[weather.iconName] : LucideIcons.CloudQuestion;
+  const { current, forecast, summary } = weather;
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Current Weather</CardTitle>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl">Weather Forecast</CardTitle>
+        <CardDescription>{summary}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-4">
-            <IconComponent className="h-12 w-12 text-primary" />
-            <div className="flex-1">
-                 <div className="text-4xl font-bold">{weather.temperature.toFixed(0)}°C</div>
-                 <p className="text-sm text-muted-foreground">{weather.conditions}</p>
+        <div className="flex items-start justify-between gap-8 mb-6">
+            <div className="flex items-center gap-4">
+                <Icon name={current.iconName} className="h-16 w-16 text-primary" />
+                <div>
+                     <div className="text-5xl font-bold">{current.temperature.toFixed(0)}°C</div>
+                     <p className="text-lg text-muted-foreground">{current.conditions}</p>
+                </div>
+            </div>
+            <div className="space-y-2 text-sm text-right">
+                <div className="flex justify-end gap-2">
+                    <span className="text-muted-foreground">Humidity</span>
+                    <span className="font-semibold">{current.humidity}%</span>
+                </div>
+                <div className="flex justify-end gap-2">
+                    <span className="text-muted-foreground">Wind</span>
+                    <span className="font-semibold">{current.windSpeed} km/h</span>
+                </div>
             </div>
         </div>
-        <div className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Humidity</span>
-                <span>{weather.humidity}%</span>
+
+        <h4 className="font-semibold mb-2">Hourly Forecast</h4>
+        <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-4 pb-4">
+            {forecast.map((hour: HourlyForecast) => (
+                <div key={hour.time} className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg bg-muted/50 min-w-[80px]">
+                    <p className="text-sm font-medium">{hour.time}</p>
+                    <Icon name={hour.iconName} className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-lg font-bold">{hour.temperature.toFixed(0)}°C</p>
+                </div>
+            ))}
             </div>
-            <div className="flex justify-between">
-                <span className="text-muted-foreground">Wind</span>
-                <span>{weather.windSpeed} km/h</span>
-            </div>
-        </div>
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+
       </CardContent>
     </Card>
   );

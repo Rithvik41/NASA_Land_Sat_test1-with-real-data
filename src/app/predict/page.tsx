@@ -161,7 +161,7 @@ export default function PredictPage() {
                         </Card>
                     </div>
 
-                    {isLoading && (
+                    {isLoading && !weather && !cropPlan && !irrigationSchedule && (
                         <Card>
                             <CardContent className="pt-6">
                                 <div className="flex justify-center items-center h-48">
@@ -172,7 +172,7 @@ export default function PredictPage() {
                     )}
 
                     {weather && (
-                        <WeatherReport weather={weather} isLoading={false} />
+                        <WeatherReport weather={weather} />
                     )}
 
                     {cropPlan && (
