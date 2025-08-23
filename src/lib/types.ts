@@ -1,7 +1,11 @@
 
 import type { DateRange } from "react-day-picker";
-import type { ChatMessageSchema } from "@/ai/flows/chatbot";
 import { z } from "zod";
+
+export const ChatMessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  content: z.string(),
+});
 
 export interface DataPoint {
   date: string; // Should be a date string that can be parsed by new Date()

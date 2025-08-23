@@ -6,7 +6,7 @@ import { suggestCoordinates } from "@/ai/flows/suggest-coordinates";
 import { predictSatellitePass } from "@/ai/flows/predict-satellite-pass";
 import { getWeatherReport } from "@/ai/flows/get-weather-report";
 import { chatbot } from "@/ai/flows/chatbot";
-import type { MetricData, SatellitePassData, WeatherData } from "@/lib/types";
+import type { MetricData, SatellitePassData, WeatherData, ChatMessage } from "@/lib/types";
 import type { ChatbotInput, ChatbotOutput } from "@/ai/flows/chatbot";
 
 export async function suggestCoordinatesAction(locationDescription: string) {
