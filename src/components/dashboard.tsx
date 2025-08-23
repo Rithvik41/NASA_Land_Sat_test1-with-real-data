@@ -10,7 +10,7 @@ import { MetricsTable } from "@/components/metrics-table";
 import { Visualizations } from "@/components/visualizations";
 import { WeatherReport } from "@/components/weather-report";
 import { useToast } from "@/hooks/use-toast";
-import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData } from "@/lib/types";
+import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData, HistoryEntry } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction, getWeatherReportAction } from "@/lib/actions";
 
@@ -92,6 +92,7 @@ export function Dashboard() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -150,6 +151,14 @@ export function Dashboard() {
     }
     setIsFetchingWeather(false);
   }, [toast]);
+  
+  const handleHistorySelect = (entry: HistoryEntry) => {
+    setLat(entry.lat);
+    setLon(entry.lon);
+    setLocationDesc(entry.locationDesc);
+    setDateRange(entry.dateRange);
+    toast({ title: "Loaded from history", description: `Loaded settings for ${entry.locationDesc}`});
+  };
 
   const handleCompute = useCallback(() => {
     if (!lat || !lon) {
@@ -166,6 +175,17 @@ export function Dashboard() {
     setWeather(null);
     fetchNextPass(lat, lon);
     fetchWeather(lat, lon);
+    
+    const newHistoryEntry: HistoryEntry = {
+      id: new Date().toISOString(),
+      lat,
+      lon,
+      locationDesc,
+      dateRange,
+      timestamp: new Date(),
+    };
+    setHistory(prev => [newHistoryEntry, ...prev.slice(0, 9)]); // Keep last 10 entries
+
 
     setTimeout(() => {
       const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
@@ -174,7 +194,7 @@ export function Dashboard() {
       setIsComputing(false);
       toast({ title: "Success", description: "Metrics computed successfully." });
     }, 1500);
-  }, [lat, lon, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
+  }, [lat, lon, locationDesc, dateRange, groundTruthData, toast, fetchNextPass, fetchWeather]);
   
 
   const onMetricsUpdate = (updatedMetrics: MetricData[]) => {
@@ -199,6 +219,8 @@ export function Dashboard() {
         onCompute={handleCompute}
         isComputing={isComputing}
         onFileUpload={setGroundTruthData}
+        history={history}
+        onHistorySelect={handleHistorySelect}
       />
 
       {isComputing && (

@@ -10,12 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Upload, Wand2, Cpu, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Upload, Wand2, Cpu, Loader2, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { parseCsv } from "@/lib/csv";
 import { suggestCoordinatesAction } from "@/lib/actions";
-import type { GroundTruthDataPoint } from "@/lib/types";
+import type { GroundTruthDataPoint, HistoryEntry } from "@/lib/types";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface InputPanelProps {
   lat: string;
@@ -29,11 +30,14 @@ interface InputPanelProps {
   onCompute: () => void;
   isComputing: boolean;
   onFileUpload: (data: GroundTruthDataPoint[] | null) => void;
+  history: HistoryEntry[];
+  onHistorySelect: (entry: HistoryEntry) => void;
 }
 
 export function InputPanel({
   lat, setLat, lon, setLon, locationDesc, setLocationDesc,
-  dateRange, setDateRange, onCompute, isComputing, onFileUpload
+  dateRange, setDateRange, onCompute, isComputing, onFileUpload,
+  history, onHistorySelect
 }: InputPanelProps) {
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -162,7 +166,45 @@ export function InputPanel({
             <Input id="csv-upload" type="file" accept=".csv" className="sr-only" onChange={handleFileChange} />
           </div>
         </div>
-         <div className="flex justify-end">
+         <div className="flex justify-between items-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" disabled={history.length === 0}>
+                  <History className="mr-2 h-4 w-4" /> History
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Computation History</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Select a past computation to reload its settings.
+                    </p>
+                  </div>
+                  <ScrollArea className="h-64">
+                    {history.length > 0 ? (
+                      <div className="grid gap-2">
+                        {history.map((entry) => (
+                           <div
+                             key={entry.id}
+                             onClick={() => onHistorySelect(entry)}
+                             className="text-sm p-2 hover:bg-muted rounded-md cursor-pointer"
+                           >
+                            <p className="font-semibold truncate">{entry.locationDesc || `${entry.lat}, ${entry.lon}`}</p>
+                             <p className="text-xs text-muted-foreground">
+                               {format(entry.timestamp, "PPP p")}
+                             </p>
+                           </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No history yet.</p>
+                    )}
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <Button onClick={onCompute} disabled={isComputing} className="w-full md:w-auto">
               {isComputing ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

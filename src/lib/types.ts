@@ -1,3 +1,6 @@
+
+import type { DateRange } from "react-day-picker";
+
 export interface DataPoint {
   date: string; // Should be a date string that can be parsed by new Date()
   value: number;
@@ -32,4 +35,13 @@ export interface WeatherData {
     humidity: number;
     windSpeed: number;
     iconName: string;
+}
+
+export interface HistoryEntry {
+  id: string;
+  lat: string;
+  lon: string;
+  locationDesc: string;
+  dateRange?: DateRange;
+  timestamp: Date;
 }
