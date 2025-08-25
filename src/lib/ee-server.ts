@@ -24,20 +24,14 @@ const initEarthEngine = (): Promise<boolean> => {
     
     try {
         const key = JSON.parse(serviceAccountKeyJson);
-        const clientEmail = key.client_email;
-        const privateKey = key.private_key;
 
-        if (!clientEmail || !privateKey) {
+        if (!key.client_email || !key.private_key) {
           throw new Error('Service account JSON is missing client_email or private_key.');
         }
 
-        const auth = new GoogleAuth({
-          credentials: { client_email: clientEmail, private_key: privateKey },
-          scopes: ['https://www.googleapis.com/auth/earthengine'],
-        });
-
+        // Pass the entire parsed key object to authenticate.
         ee.data.authenticateViaPrivateKey(
-            {client_email: clientEmail, privateKey: privateKey},
+            key,
             () => {
                 ee.initialize(
                     null, null,
