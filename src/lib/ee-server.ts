@@ -19,38 +19,38 @@ const initEarthEngine = (): Promise<boolean> => {
     const privateKey = process.env.EE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
     if (!clientEmail || !privateKey) {
-      throw new Error(
+      return reject(new Error(
         'Missing EE_CLIENT_EMAIL or EE_PRIVATE_KEY. Configure as environment variables.'
-      );
+      ));
     }
     
     const auth = new GoogleAuth({
       credentials: { client_email: clientEmail, private_key: privateKey },
       scopes: ['https://www.googleapis.com/auth/earthengine.readonly'],
-    }).getRequestHeaders();
+    });
 
-    auth.then(headers => {
-        ee.data.setAuthToken(
-            '',
-            'Bearer',
-            headers.Authorization.split(' ')[1],
-            3600,
-            [],
-            () => {
-                ee.initialize(null, null, () => {
+    ee.data.authenticateViaPrivateKey(
+        {client_email: clientEmail, privateKey: privateKey},
+        () => {
+            ee.initialize(
+                null, null,
+                () => {
                     console.log('Earth Engine initialized.');
                     resolve(true);
-                }, (err: any) => {
+                },
+                (err: any) => {
                     console.error('EE initialization error:', err);
+                    eeInitialized = null; // Reset on failure
                     reject(new Error(`Earth Engine initialization error: ${err}`));
-                });
-            },
-            true
-        );
-    }).catch(err => {
-        console.error('EE authentication error:', err);
-        reject(new Error(`Earth Engine authentication error: ${err}`));
-    });
+                }
+            );
+        },
+        (err: any) => {
+            console.error('EE authentication error:', err);
+            eeInitialized = null; // Reset on failure
+            reject(new Error(`Earth Engine authentication error: ${err}`));
+        }
+    );
   });
 
   return eeInitialized;
