@@ -14,6 +14,15 @@ import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData, 
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction, getWeatherReportAction } from "@/lib/actions";
 
+// Seeded pseudo-random number generator for deterministic results
+function seededRandom(seed: number) {
+    let state = seed;
+    return () => {
+        const x = Math.sin(state++) * 10000;
+        return x - Math.floor(x);
+    };
+}
+
 // Mock data generation
 const metricNames = [
   'NDVI', 'NDBI', 'NDWI', 'NBR', 'MNDWI', 'Yield Index', 'Soil Moisture Percent', 'Water Percent', 'SWIR Ratio',
@@ -22,30 +31,49 @@ const metricNames = [
   'Built-up Expansion', 'Vegetation Loss'
 ];
 
-function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthDataPoint[]): MetricData[] {
+function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthDataPoint[], lat?: string, lon?: string): MetricData[] {
   const from = dateRange.from || new Date();
   const to = dateRange.to || new Date();
   const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Create a seed from location and date range for deterministic results
+  const seedString = `${lat || '0'}${lon || '0'}${from.toISOString()}${to.toISOString()}`;
+  let seed = 0;
+  for (let i = 0; i < seedString.length; i++) {
+    seed = (seed + seedString.charCodeAt(i)) % 1000000;
+  }
+  const random = seededRandom(seed);
 
   return metricNames.map(name => {
-    let baseValue = Math.random() * 2 - 1;
-    if (name.includes('Percent') || name === 'Yield Index') {
-        baseValue = Math.random() * 100;
+    let baseValue = random() * 2 - 1; // Default for indices like NDVI
+    if (name.includes('Percent')) {
+        baseValue = random() * 100;
     }
-    if (name.includes('Area')) {
-        baseValue = Math.random() * 1000;
+     if (name === 'Yield Index') {
+        baseValue = 30 + random() * 70; // Yield Index between 30 and 100
+    }
+    if (name.includes('Area') && !name.includes('Change')) {
+        baseValue = random() * 1000;
     }
      if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
-        baseValue = (Math.random() - 0.5) * 200;
+        baseValue = (random() - 0.5) * 200;
     }
-
 
     const timeSeries = Array.from({ length: diffDays }, (_, i) => {
       const date = addDays(from, i);
-      let value = baseValue + (Math.random() - 0.5) * 0.1 * (i / diffDays);
+      let value = baseValue + (random() - 0.5) * 0.1 * (i / diffDays);
        if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
-        value = baseValue + (Math.random() - 0.5) * 10 * (i/diffDays);
+        value = baseValue + (random() - 0.5) * 10 * (i/diffDays);
        }
+       
+       // Clamp values to their valid ranges
+       if (['NDVI', 'NDWI', 'NDBI', 'NBR', 'MNDWI'].includes(name)) {
+            value = Math.max(-1, Math.min(1, value));
+       }
+       if (name === 'Soil Moisture Percent') {
+           value = Math.max(0, Math.min(100, value));
+       }
+
       return { date: date.toISOString(), value };
     });
 
@@ -195,7 +223,7 @@ export function Dashboard() {
 
 
     setTimeout(() => {
-      const mockData = generateMockMetricData(dateRange, groundTruthData || undefined);
+      const mockData = generateMockMetricData(dateRange, groundTruthData || undefined, lat, lon);
       setMetrics(mockData);
       setSelectedMetric('NDVI'); // Reset to default metric on new computation
       setIsComputing(false);
