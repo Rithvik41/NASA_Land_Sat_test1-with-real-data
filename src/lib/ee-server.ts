@@ -25,11 +25,6 @@ const initEarthEngine = (): Promise<boolean> => {
     try {
         const key = JSON.parse(serviceAccountKeyJson);
 
-        if (!key.client_email || !key.private_key) {
-          throw new Error('Service account JSON is missing client_email or private_key.');
-        }
-
-        // Pass the entire parsed key object to authenticate.
         ee.data.authenticateViaPrivateKey(
             key,
             () => {
