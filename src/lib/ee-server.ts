@@ -14,43 +14,55 @@ const initEarthEngine = (): Promise<boolean> => {
   }
 
   eeInitialized = new Promise((resolve, reject) => {
-    const clientEmail = process.env.EE_CLIENT_EMAIL;
-    // Handle the newline characters correctly from the environment variable.
-    const privateKey = process.env.EE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const serviceAccountKeyJson = process.env.EE_SERVICE_ACCOUNT_KEY;
 
-    if (!clientEmail || !privateKey) {
+    if (!serviceAccountKeyJson) {
       return reject(new Error(
-        'Missing EE_CLIENT_EMAIL or EE_PRIVATE_KEY. Configure as environment variables.'
+        'Missing EE_SERVICE_ACCOUNT_KEY. Configure as an environment variable.'
       ));
     }
     
-    const auth = new GoogleAuth({
-      credentials: { client_email: clientEmail, private_key: privateKey },
-      scopes: ['https://www.googleapis.com/auth/earthengine.readonly'],
-    });
+    try {
+        const key = JSON.parse(serviceAccountKeyJson);
+        const clientEmail = key.client_email;
+        const privateKey = key.private_key;
 
-    ee.data.authenticateViaPrivateKey(
-        {client_email: clientEmail, privateKey: privateKey},
-        () => {
-            ee.initialize(
-                null, null,
-                () => {
-                    console.log('Earth Engine initialized.');
-                    resolve(true);
-                },
-                (err: any) => {
-                    console.error('EE initialization error:', err);
-                    eeInitialized = null; // Reset on failure
-                    reject(new Error(`Earth Engine initialization error: ${err}`));
-                }
-            );
-        },
-        (err: any) => {
-            console.error('EE authentication error:', err);
-            eeInitialized = null; // Reset on failure
-            reject(new Error(`Earth Engine authentication error: ${err}`));
+        if (!clientEmail || !privateKey) {
+          throw new Error('Service account JSON is missing client_email or private_key.');
         }
-    );
+
+        const auth = new GoogleAuth({
+          credentials: { client_email: clientEmail, private_key: privateKey },
+          scopes: ['https://www.googleapis.com/auth/earthengine'],
+        });
+
+        ee.data.authenticateViaPrivateKey(
+            {client_email: clientEmail, privateKey: privateKey},
+            () => {
+                ee.initialize(
+                    null, null,
+                    () => {
+                        console.log('Earth Engine initialized.');
+                        resolve(true);
+                    },
+                    (err: any) => {
+                        console.error('EE initialization error:', err);
+                        eeInitialized = null; // Reset on failure
+                        reject(new Error(`Earth Engine initialization error: ${err}`));
+                    }
+                );
+            },
+            (err: any) => {
+                console.error('EE authentication error:', err);
+                eeInitialized = null; // Reset on failure
+                reject(new Error(`Earth Engine authentication error: ${err}`));
+            }
+        );
+    } catch(err: any) {
+        console.error('Failed to parse service account key:', err);
+        eeInitialized = null;
+        reject(new Error(`Failed to parse EE_SERVICE_ACCOUNT_KEY: ${err.message}`));
+    }
   });
 
   return eeInitialized;
