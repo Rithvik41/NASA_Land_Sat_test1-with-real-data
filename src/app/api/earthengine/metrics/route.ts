@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { getEarthEngineMetrics } from '@/lib/ee-server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function parseFloatOr(val: any, fallback: number) {
     const n = parseFloat(val);
     return Number.isFinite(n) ? n : fallback;
@@ -44,7 +47,9 @@ export async function GET(request: Request) {
       },
     };
     
-    return NextResponse.json(clamped);
+    return NextResponse.json(clamped, {
+        headers: { "Cache-Control": "no-store" }
+    });
 
   } catch (err: any) {
     console.error('[EE API Error]', err);

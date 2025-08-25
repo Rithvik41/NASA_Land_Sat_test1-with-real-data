@@ -3,7 +3,6 @@
 // It contains the server-side logic for interacting with Google Earth Engine.
 
 import ee from '@google/earthengine';
-import { GoogleAuth } from 'google-auth-library';
 
 // Promise for singleton EE initialization.
 let eeInitialized: Promise<boolean> | null = null;
@@ -17,6 +16,7 @@ const initEarthEngine = (): Promise<boolean> => {
     const serviceAccountKeyJson = process.env.EE_SERVICE_ACCOUNT_KEY;
 
     if (!serviceAccountKeyJson) {
+      eeInitialized = null;
       return reject(new Error(
         'Missing EE_SERVICE_ACCOUNT_KEY. Configure as an environment variable.'
       ));
@@ -126,7 +126,7 @@ export async function getEarthEngineMetrics(
     ic = ic.map((img) => {
         let scaled = img;
         if (def.scaleFactor) {
-            const opticalBands = img.select([def.red, def.green, def.nir, def.swir1, def.swir2 || def.swir1]);
+            const opticalBands = img.select([def.red, def.green, def.nir, def.swir1, def.swir2 || def.swir1].filter(b => img.bandNames().contains(b)));
             const scaledBands = opticalBands.multiply(def.scaleFactor);
             scaled = img.addBands(scaledBands, undefined, true);
         }

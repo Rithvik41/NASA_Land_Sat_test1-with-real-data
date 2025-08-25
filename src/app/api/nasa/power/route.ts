@@ -1,6 +1,9 @@
 
 import { NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function parseFloatOr(val: any, fallback: number) {
     const n = parseFloat(val);
     return Number.isFinite(n) ? n : fallback;
@@ -25,12 +28,14 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "lat/lon required" }, { status: 400 });
         }
 
-        const params = "T2M,PRECTOT,WS2M,RH2M";
-        const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${params}&community=AG&latitude=${lat}&longitude=${lon}&start=${start}&end=${end}&format=JSON`;
+        const params = "T2M,PRECTOTCORR,WS2M,RH2M,ALLSKY_SFC_SW_DWN";
+        const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${params}&community=AG&longitude=${lon}&latitude=${lat}&start=${start}&end=${end}&format=JSON`;
         const r = await fetch(url);
         if (!r.ok) throw new Error(`NASA POWER error: ${r.status}`);
         const data = await r.json();
-        return NextResponse.json({ source: "NASA POWER", url, data });
+        return NextResponse.json({ source: "NASA POWER", url, data }, {
+            headers: { "Cache-Control": "no-store" }
+        });
 
     } catch (err: any) {
         console.error('[NASA POWER API Error]', err);

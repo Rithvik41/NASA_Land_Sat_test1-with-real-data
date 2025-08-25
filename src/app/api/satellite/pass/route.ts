@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { satrec, propagate, gstime, eciToGeodetic } from 'satellite.js';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function parseFloatOr(val: any, fallback: number) {
   const n = parseFloat(val);
   return Number.isFinite(n) ? n : fallback;
@@ -12,15 +15,22 @@ type SatelliteName = 'landsat8' | 'landsat9';
 async function fetchTLE(sat: SatelliteName) {
   const norad = sat === 'landsat9' ? '49260' : '39084';
   const url = `https://celestrak.org/NORAD/elements/gp.php?CATNR=${norad}&FORMAT=TLE`;
-  const r = await fetch(url);
+  const r = await fetch(url, { cache: 'no-store' });
   const text = await r.text();
-  const lines = text.trim().split('\\n');
-  if (lines.length < 2) { // Sometimes name is not on first line
-      const l1_index = lines.findIndex(l => l.startsWith('1 '));
-      if(l1_index === -1) throw new Error("Failed to parse TLE: Line 1 not found");
-      return { name: `NORAD ${norad}`, l1: lines[l1_index], l2: lines[l1_index + 1] };
-  }
-  return { name: lines[0].trim(), l1: lines[1].trim(), l2: lines[2].trim() };
+  const lines = text.trim().split(/\r?\n/);
+  
+  if (lines.length < 2) throw new Error("Failed to parse TLE from Celestrak");
+
+  const line1Index = lines.findIndex(l => l.startsWith('1 '));
+  if (line1Index === -1) throw new Error("Failed to parse TLE: Line 1 not found");
+  
+  const line2Index = lines.findIndex(l => l.startsWith('2 '));
+  if (line2Index === -1) throw new Error("Failed to parse TLE: Line 2 not found");
+  
+  // Name is typically the line before the first TLE line, but can be absent.
+  const name = line1Index > 0 ? lines[line1Index - 1].trim() : `NORAD ${norad}`;
+  
+  return { name: name, l1: lines[line1Index], l2: lines[line2Index] };
 }
 
 export async function GET(request: Request) {
@@ -36,7 +46,7 @@ export async function GET(request: Request) {
     }
 
     const { name, l1, l2 } = await fetchTLE(sat);
-    const satrecObj = satrec.fromTle(name, l1, l2);
+    const satrecObj = satrec.fromTle(l1, l2);
 
     const start = new Date();
     const end = new Date(start.getTime() + hours * 3600 * 1000);
@@ -49,7 +59,7 @@ export async function GET(request: Request) {
     for (let t = start.getTime(); t <= end.getTime(); t += stepSec * 1000) {
       const time = new Date(t);
       const pv = propagate(satrecObj, time);
-      if (typeof pv.position === 'boolean') continue;
+      if (typeof pv.position === 'boolean' || !pv.position) continue;
 
       const gmst = gstime(time);
       const geo = eciToGeodetic(pv.position, gmst);
@@ -75,6 +85,8 @@ export async function GET(request: Request) {
       window_hours: hours,
       approxClosestApproachUTC: best.t.toISOString(),
       note: 'This is an approximation based on subsatellite ground-track proximity. For precise AOS/LOS/elevation, implement full topocentric calculations.',
+    }, {
+        headers: { "Cache-Control": "no-store" }
     });
   } catch (err: any) {
     console.error('[Satellite Pass API Error]', err);
