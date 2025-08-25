@@ -16,7 +16,7 @@ const initEarthEngine = (): Promise<boolean> => {
     const serviceAccountKeyJson = process.env.EE_SERVICE_ACCOUNT_KEY;
 
     if (!serviceAccountKeyJson) {
-      eeInitialized = null;
+      eeInitialized = null; // Reset on failure
       return reject(new Error(
         'Missing EE_SERVICE_ACCOUNT_KEY. Configure as an environment variable.'
       ));
@@ -54,7 +54,7 @@ const initEarthEngine = (): Promise<boolean> => {
         );
     } catch(err: any) {
         console.error('Failed to parse service account key:', err);
-        eeInitialized = null;
+        eeInitialized = null; // Reset on failure
         reject(new Error(`Failed to parse EE_SERVICE_ACCOUNT_KEY: ${err.message}`));
     }
   });
