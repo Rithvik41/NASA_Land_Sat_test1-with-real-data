@@ -74,18 +74,40 @@ export async function generateReportAction(
   }
 }
 
-export async function predictSatellitePassAction(input: { latitude: number; longitude: number; }): Promise<{data: SatellitePassData | null, error: string | null}> {
+export async function predictSatellitePassAction(input: { latitude: number; longitude: number; }): Promise<{data: any | null, error: string | null}> {
     try {
-        const result = await predictSatellitePass(input);
-        return { data: result, error: null };
+        const query = new URLSearchParams({
+            lat: String(input.latitude),
+            lon: String(input.longitude),
+            sat: 'landsat8' // or landsat9
+        }).toString();
+
+        // This assumes the app is running on localhost:9002, replace with deployed URL in production
+        const host = process.env.NEXT_PUBLIC_HOST_URL || 'http://localhost:9002';
+        const response = await fetch(`${host}/api/satellite/pass?${query}`);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to fetch satellite pass: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        // The API returns 'approxClosestApproachUTC', let's map it to what the frontend expects
+        return { data: {
+            passTime: result.approxClosestApproachUTC,
+            satelliteName: result.satellite,
+            status: 'Active', // Mock status, TLE doesn't provide this directly
+            speed: 7.5 // Typical LEO speed
+        }, error: null };
     } catch (error) {
         console.error("predictSatellitePassAction Error:", error);
-        return { data: null, error: `AI Error: ${getErrorMessage(error)}` };
+        return { data: null, error: getErrorMessage(error) };
     }
 }
 
 export async function getWeatherReportAction(input: { latitude: number; longitude: number; }): Promise<{data: WeatherData | null, error: string | null}> {
     try {
+        // AI version is kept as a fallback or for different kinds of reports
         const result = await getWeatherReport(input);
         return { data: result, error: null };
     } catch (error) {

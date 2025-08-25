@@ -10,97 +10,36 @@ import { MetricsTable } from "@/components/metrics-table";
 import { Visualizations } from "@/components/visualizations";
 import { WeatherReport } from "@/components/weather-report";
 import { useToast } from "@/hooks/use-toast";
-import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData, HistoryEntry } from "@/lib/types";
+import type { MetricData, GroundTruthDataPoint, SatellitePassData, WeatherData, HistoryEntry, EEMetrics } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { predictSatellitePassAction, getWeatherReportAction } from "@/lib/actions";
 
-// Seeded pseudo-random number generator for deterministic results
-function seededRandom(seed: number) {
-    let state = seed;
-    return () => {
-        const x = Math.sin(state++) * 10000;
-        return x - Math.floor(x);
-    };
-}
-
-// Mock data generation
-const metricNames = [
-  'NDVI', 'NDBI', 'NDWI', 'NBR', 'MNDWI', 'Yield Index', 'Soil Moisture Percent', 'Water Percent', 'SWIR Ratio',
-  'Vegetation Area', 'Built-up Area', 'Water Area', 'Other Area',
-  'Vegetation Area Change', 'Built-up Area Change', 'Water Area Change', 'Other Area Change',
-  'Built-up Expansion', 'Vegetation Loss'
-];
-
-function generateMockMetricData(dateRange: DateRange, groundTruth?: GroundTruthDataPoint[], lat?: string, lon?: string): MetricData[] {
-  const from = dateRange.from || new Date();
-  const to = dateRange.to || new Date();
-  const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
-  
-  // Create a seed from location and date range for deterministic results
-  const seedString = `${lat || '0'}${lon || '0'}${from.toISOString()}${to.toISOString()}`;
-  let seed = 0;
-  for (let i = 0; i < seedString.length; i++) {
-    seed = (seed + seedString.charCodeAt(i)) % 1000000;
-  }
-  const random = seededRandom(seed);
-
-  return metricNames.map(name => {
-    let baseValue = random() * 2 - 1; // Default for indices like NDVI
-    if (name.includes('Percent')) {
-        baseValue = random() * 100;
-    }
-     if (name === 'Yield Index') {
-        baseValue = 30 + random() * 70; // Yield Index between 30 and 100
-    }
-    if (name.includes('Area') && !name.includes('Change')) {
-        baseValue = random() * 1000;
-    }
-     if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
-        baseValue = (random() - 0.5) * 200;
-    }
-
-    const timeSeries = Array.from({ length: diffDays }, (_, i) => {
-      const date = addDays(from, i);
-      let value = baseValue + (random() - 0.5) * 0.1 * (i / diffDays);
-       if (name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
-        value = baseValue + (random() - 0.5) * 10 * (i/diffDays);
-       }
-       
-       // Clamp values to their valid ranges
-       if (['NDVI', 'NDWI', 'NDBI', 'NBR', 'MNDWI'].includes(name)) {
-            value = Math.max(-1, Math.min(1, value));
-       }
-       if (name === 'Soil Moisture Percent') {
-           value = Math.max(0, Math.min(100, value));
-       }
-
-      return { date: date.toISOString(), value };
+const transformEEMetricsToMetricData = (eeMetrics: EEMetrics, dateRange: DateRange): MetricData[] => {
+    // Since EE provides a single composite value, we can represent it as a flat line
+    // or as a two-point series for change calculation. For simplicity, we'll create a basic structure.
+    // A real implementation would fetch a time-series from EE.
+    const createMetric = (name: string, value: number | null): MetricData => ({
+        name,
+        timeSeries: [
+            { date: (dateRange.from as Date).toISOString(), value: value || 0 },
+            { date: (dateRange.to as Date).toISOString(), value: value || 0 }
+        ],
+        firstValue: value,
+        lastValue: value,
+        percentageChange: 0,
+        n: value !== null ? 1 : 0
     });
 
-    const validPoints = timeSeries.filter(d => d.value !== null && !isNaN(d.value));
-    const firstValue = validPoints.length > 0 ? validPoints[0].value : null;
-    const lastValue = validPoints.length > 0 ? validPoints[validPoints.length - 1].value : null;
-    
-    let percentageChange: number | null = null;
-    if (firstValue !== null && lastValue !== null && firstValue !== 0) {
-        if(name.includes('Change') || name.includes('Expansion') || name.includes('Loss')) {
-            percentageChange = lastValue; // For change metrics, this might represent the final change percentage
-        } else {
-             percentageChange = ((lastValue - firstValue) / Math.abs(firstValue)) * 100;
-        }
-    }
-    
-    return {
-      name,
-      timeSeries,
-      firstValue,
-      lastValue,
-      percentageChange,
-      n: validPoints.length,
-      groundTruth: name === 'NDVI' ? groundTruth : undefined, // Only attach ground truth to NDVI for demo
-    };
-  });
+    return [
+        createMetric('NDVI', eeMetrics.NDVI),
+        createMetric('NDBI', eeMetrics.NDBI),
+        createMetric('NDWI', eeMetrics.NDWI),
+        createMetric('NBR', eeMetrics.NBR),
+        createMetric('MNDWI', eeMetrics.MNDWI),
+        createMetric('SWIR_RATIO', eeMetrics.SWIR_RATIO),
+    ];
 }
+
 
 export function Dashboard() {
   const { toast } = useToast();
@@ -146,7 +85,7 @@ export function Dashboard() {
       const timerId = setTimeout(() => {
         new Notification("Satellite Alert", {
           body: `Satellite ${nextPass.satelliteName} will pass over your selected location (${lat}, ${lon}) in 1 minute.`,
-          icon: "/favicon.ico", // Optional: add an icon
+          icon: "/favicon.ico",
         });
       }, delay);
 
@@ -163,7 +102,7 @@ export function Dashboard() {
       setIsFetchingPass(true);
       const result = await predictSatellitePassAction({ latitude: parseFloat(lat), longitude: parseFloat(lon) });
       if (result.error) {
-          toast({ title: "AI Error", description: result.error, variant: "destructive" });
+          toast({ title: "Error", description: result.error, variant: "destructive" });
           setNextPass(null);
       } else if (result.data) {
           setNextPass(result.data);
@@ -219,16 +158,41 @@ export function Dashboard() {
       dateRange,
       timestamp: new Date(),
     };
-    setHistory(prev => [newHistoryEntry, ...prev.slice(0, 9)]); // Keep last 10 entries
+    setHistory(prev => [newHistoryEntry, ...prev.slice(0, 9)]);
 
+    try {
+        const params = new URLSearchParams({
+            lat,
+            lon,
+            start: format(dateRange.from, 'yyyy-MM-dd'),
+            end: format(dateRange.to, 'yyyy-MM-dd'),
+            collection: 'landsat8'
+        });
+        
+        const response = await fetch(`/api/earthengine/metrics?${params.toString()}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to fetch metrics: ${response.statusText}`);
+        }
+        
+        const eeMetrics: EEMetrics = await response.json();
+        const data = transformEEMetricsToMetricData(eeMetrics, dateRange);
 
-    setTimeout(() => {
-      const mockData = generateMockMetricData(dateRange, groundTruthData || undefined, lat, lon);
-      setMetrics(mockData);
-      setSelectedMetric('NDVI'); // Reset to default metric on new computation
-      setIsComputing(false);
-      toast({ title: "Success", description: "Metrics computed successfully." });
-    }, 1000);
+        // Add ground truth data if available
+        const ndviMetric = data.find(m => m.name === 'NDVI');
+        if (ndviMetric && groundTruthData) {
+            ndviMetric.groundTruth = groundTruthData;
+        }
+
+        setMetrics(data);
+        setSelectedMetric('NDVI');
+        toast({ title: "Success", description: "Metrics computed successfully from Google Earth Engine." });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+        toast({ title: "Computation Error", description: errorMessage, variant: "destructive" });
+    } finally {
+        setIsComputing(false);
+    }
   }, [lat, lon, locationDesc, dateRange, groundTruthData, toast]);
   
 

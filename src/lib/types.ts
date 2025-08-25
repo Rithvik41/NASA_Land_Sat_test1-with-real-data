@@ -30,6 +30,27 @@ export interface MetricData {
   groundTruth?: GroundTruthDataPoint[];
 }
 
+export interface EEMetrics {
+    NDVI: number;
+    NDVI_stdDev: number | null;
+    NDWI: number;
+    MNDWI: number;
+    NDBI: number;
+    NBR: number;
+    SWIR_RATIO: number | null;
+    provenance: {
+        collection: string;
+        start: string;
+        end: string;
+        scaleMeters: number;
+        aoi: {
+            lat: number;
+            lon: number;
+            bufferKm: number;
+        };
+    };
+}
+
 export interface SatellitePassData {
     passTime: string;
     satelliteName: string;
